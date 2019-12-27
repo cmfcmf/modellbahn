@@ -1,9 +1,6 @@
 {%- assign folder_path = page.path | split:"/" | pop -%}
 {%- assign folder_path = folder_path | join:"/" -%}
-<script>
-window.onload = function() {
-    STLViewer({{ "/" | append: folder_path | append: "/" | append: include.name | relative_url | jsonify }}, "model", {{ include.color | default:"0xff5533" | jsonify}})
-}
-</script>
-<div id="model" style="width: 100%; height: 200px"></div>
-{% include source.html name=include.name %}
+{% comment %}
+https://help.github.com/en/github/managing-files-in-a-repository/3d-file-viewer#embedding-your-model-elsewhere
+{% endcomment %}
+<script src="https://embed.github.com/view/3d/{{ site.repository }}/master/{{ "/" | append: folder_path | append: "/" | append: include.name }}?width=740"></script>
