@@ -1,0 +1,8 @@
+{%- assign tags = include.tags | default: [] | sort -%}
+<p>
+  <em>
+    {%- for tag in tags -%}
+      #{{ tag | escape }}
+    {% endfor -%}
+  </em>
+</p>

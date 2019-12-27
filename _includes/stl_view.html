@@ -1,0 +1,9 @@
+{%- assign folder_path = page.path | split:"/" | pop -%}
+{%- assign folder_path = folder_path | join:"/" -%}
+<script>
+window.onload = function() {
+    STLViewer({{ "/" | append: folder_path | append: "/" | append: include.name | jsonify }}, "model", {{ include.color | default:"0xff5533" | jsonify}})
+}
+</script>
+<div id="model" style="width: 100%; height: 200px"></div>
+{% include source.html name=include.name %}

@@ -1,0 +1,31 @@
+---
+layout: page
+---
+
+{%- include tags.html tags=page.tags -%}
+
+{{ content }}
+
+<h2>Downloads und weitere Dateien</h2>
+
+{% assign folder_path = page.path | split:"/" | pop %}
+{% assign folder_path = folder_path | join:"/" %}
+
+<p>
+  Alle Dateien befinden sich in meinem GitHub Repository
+  im Ordner
+  <a href="https://github.com/{{ site.repository }}/blob/master/{{ folder_path }}">{{ folder_path }}</a>.
+</p>
+
+<p>Enthaltene Dateien:</p>
+<ul>
+{%- for file in site.static_files -%}
+  {%- if file.path contains folder_path -%}
+    <li><a href="https://github.com/{{ site.repository }}/blob/master/{{ file.path }}">{{ file.name }}</a></li>
+  {%- endif -%}
+{%- endfor -%}
+</ul>
+
+{%- if page.tags contains "3d" -%}
+  {%- include stl_viewer_dependencies.html -%}
+{%- endif -%}

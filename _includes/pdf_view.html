@@ -1,0 +1,4 @@
+{%- assign folder_path = page.path | split:"/" | pop -%}
+{%- assign folder_path = folder_path | join:"/" -%}
+<object data="/{{ folder_path }}/{{ include.name | escape }}" width="100%" height="500" type="application/pdf"></object>
+{% include source.html name=include.name %}

@@ -1,0 +1,18 @@
+title: Modellbahn
+repository: cmfcmf/modellbahn
+email: hallo@christianflach.de
+description: Eine Sammlung von Hardware und Software, die ich auf meiner Modelleisenbahnanlage verwende.
+twitter_username: christianmflach
+github_username:  cmfcmf
+
+markdown: kramdown
+theme: minima
+plugins:
+  - jekyll-feed
+
+header_pages: [none] # cannot use an empty array here, because that is seen as not defined.
+
+# https://github.com/benbalter/jekyll-titles-from-headings#configuration
+titles_from_headings:
+  enabled:     true
+  strip_title: true
