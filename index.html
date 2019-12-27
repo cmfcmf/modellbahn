@@ -7,7 +7,7 @@ layout: home
 
 <h2 class="post-list-heading">Projekte</h2>
 <ul class="post-list">
-  {%- assign my_pages = site.html_pages | where_exp: "page", "page.title" -%}
+  {%- assign my_pages = site.html_pages | where_exp: "page", "page.title" | sort: "title" -%}
   {%- for page in my_pages -%}
   <li>
     {%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
