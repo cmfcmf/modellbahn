@@ -1,6 +1,6 @@
 ---
 layout: project
-tags: [3d, märklin, beleuchtung, wagenbeleuchtung, steuerwagen]
+tags: [3d, märklin, beleuchtung, wagenbeleuchtung]
 permalink: beleuchtung/waggons/märklin-dosto-43585-43584
 ---
 
