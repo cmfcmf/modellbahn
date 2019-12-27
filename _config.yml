@@ -1,5 +1,7 @@
-title: Modellbahn
 repository: cmfcmf/modellbahn
+baseurl: /modellbahn
+
+title: Modellbahn
 email: hallo@christianflach.de
 description: Eine Sammlung von Hardware und Software, die ich auf meiner Modelleisenbahnanlage verwende.
 twitter_username: christianmflach
