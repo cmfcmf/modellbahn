@@ -3,6 +3,7 @@ layout: project
 tags: [arduino, decoder, signale, viessmann, dcc]
 permalink: decoder/multiplex
 state: wip
+related_projects: [signale/multiplex]
 ---
 
 # Decoder für Viessmann Multiplex-Signale

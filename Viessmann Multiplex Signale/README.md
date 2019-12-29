@@ -2,9 +2,10 @@
 layout: project
 tags: [signale, viessmann, eagle]
 permalink: signale/multiplex
+related_projects: [decoder/multiplex]
 ---
 
-# Viessmann Multiplex-Signale
+# Aufbau der Viessmann Multiplex-Signale
 
 Viessmann bietet seit einer Weile Signale mit "Multiplex-Technologie" an.
 Zur genauen Funktionsweise gibt es auch schon auf anderen Seiten einige Informationen:

@@ -38,6 +38,16 @@ layout: page
 </ul>
 {%- endif -%}
 
+{%- if page.related_projects -%}
+  <h2>Ähnliche/Zugehörige Projekte</h2>
+  <ul>
+    {%- for related_project_permalink in page.related_projects -%}
+      {%- assign related_project = site.html_pages | where_exp: "page", "page.permalink == related_project_permalink" | first -%}
+      <li><a href="{{ related_project.url | relative_url }}">{{ related_project.title }}</a></li>
+    {%- endfor -%}
+  </ul>
+{%- endif -%}
+
 {%- if page.latex -%}
 <script type="text/x-mathjax-config">
   MathJax.Hub.Config({
