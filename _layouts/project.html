@@ -4,13 +4,16 @@ layout: page
 
 {%- include tags.html tags=page.tags -%}
 
-{{ content }}
+{{- content -}}
 
+{%- assign folder_path = page.path | split:"/" | pop -%}
+{%- assign folder_path = folder_path | join:"/" -%}
+
+{%- assign files = site.static_files | where_exp:"file","file.path contains folder_path" -%}
+{%- assign num_files = files | size -%}
+
+{%- if num_files > 0 -%}
 <h2>Downloads und weitere Dateien</h2>
-
-{% assign folder_path = page.path | split:"/" | pop %}
-{% assign folder_path = folder_path | join:"/" %}
-
 <p>
   Alle Dateien befinden sich in meinem GitHub Repository
   im Ordner
@@ -19,12 +22,11 @@ layout: page
 
 <p>Enthaltene Dateien:</p>
 <ul>
-{%- for file in site.static_files -%}
-  {%- if file.path contains folder_path -%}
-    <li><a href="https://github.com/{{ site.repository }}/blob/master/{{ file.path }}">{{ file.name }}</a></li>
-  {%- endif -%}
+{%- for file in files -%}
+  <li><a href="https://github.com/{{ site.repository }}/blob/master/{{ file.path }}">{{ file.name }}</a></li>
 {%- endfor -%}
 </ul>
+{%- endif -%}
 
 {%- if page.latex -%}
 <script type="text/x-mathjax-config">

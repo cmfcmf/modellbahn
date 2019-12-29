@@ -1,5 +1,6 @@
 {%- assign folder_path = page.path | split:"/" | pop -%}
 {%- assign folder_path = folder_path | join:"/" -%}
 <p style="text-align: right;">
-  <a href="https://github.com/{{ site.repository }}/blob/master/{{ folder_path }}/{{ include.name }}">Quelle</a>
+  <a href="https://github.com/{{ site.repository }}/blob/master/{{ folder_path }}/{{ include.name }}">Quelle</a> |
+  <a href="https://github.com/{{ site.repository }}/raw/master/{{ folder_path }}/{{ include.name }}">Download</a>
 </p>

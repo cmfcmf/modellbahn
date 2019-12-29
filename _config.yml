@@ -8,9 +8,12 @@ twitter_username: christianmflach
 github_username:  cmfcmf
 
 markdown: kramdown
+kramdown:
+  input: GFM
+
 theme: minima
-plugins:
-  - jekyll-feed
+
+plugins: []
 
 header_pages: [none] # cannot use an empty array here, because that is seen as not defined.
 

@@ -1,6 +1,6 @@
 ---
 layout: project
-tags: [märklin, beleuchtung, wagenbeleuchtung, kicad]
+tags: [beleuchtung, wagenbeleuchtung, kicad]
 permalink: beleuchtung/waggons/allgemein
 latex: true
 ---
