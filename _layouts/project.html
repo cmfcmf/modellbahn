@@ -4,6 +4,16 @@ layout: page
 
 {%- include tags.html tags=page.tags -%}
 
+{%- if page.state == "wip" -%}
+  <p class="project-state wip">
+    <strong>Achtung:</strong> Dieses Projekt ist noch nicht abgeschlossen. Alle hier aufgeführten Informationen, Schaltpläne und Code sind daher mit Vorsicht zu genießen und funktionieren unter Umständen noch nicht richtig.
+  </p>
+{%- elsif page.state == "finished" -%}
+  <p class="project-state finished">
+    Dieses Projekt ist abgeschlossen und so in Verwendung wie hier beschrieben.
+  </p>
+{%- endif -%}
+
 {{- content -}}
 
 {%- assign folder_path = page.path | split:"/" | pop -%}

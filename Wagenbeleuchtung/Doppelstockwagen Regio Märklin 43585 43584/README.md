@@ -2,6 +2,7 @@
 layout: project
 tags: [3d, märklin, beleuchtung, wagenbeleuchtung]
 permalink: beleuchtung/waggons/märklin-dosto-43585-43584
+state: finished
 ---
 
 # Beleuchtungsträger für Doppelstockwagen von Märklin (Artnr. 43585 und 43584)

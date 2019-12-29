@@ -2,6 +2,7 @@
 layout: project
 tags: [3d, märklin, beleuchtung, wagenbeleuchtung, steuerwagen]
 permalink: beleuchtung/waggons/märklin-dosto-steuerwagen-43586
+state: finished
 ---
 
 # Beleuchtungsträger für Doppelstocksteuerwagen von Märklin (Artnr. 43586)

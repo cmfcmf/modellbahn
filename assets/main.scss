@@ -1,0 +1,16 @@
+---
+---
+
+@import "minima";
+
+.project-state {
+    padding-left: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    &.wip {
+        border-left: 4px solid #ff3333;
+    }
+    &.finished {
+        border-left: 4px solid #5cd709;
+    }
+}
