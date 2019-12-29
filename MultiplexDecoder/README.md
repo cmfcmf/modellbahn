@@ -1,7 +1,7 @@
 ---
 layout: project
 tags: [arduino, decoder, signale, viessmann, dcc]
-permalink: decoder/multiplexs
+permalink: decoder/multiplex
 state: wip
 ---
 
