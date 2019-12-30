@@ -6,6 +6,9 @@
 #include "Chaplex.h"
 #include "AspectMapping.h"
 
+#pragma GCC optimize ("O3")
+#pragma GCC optimize ("unroll-loops")
+
 class AbstractSignal {
   friend class SignalBuilder;
   public:
@@ -18,11 +21,32 @@ class AbstractSignal {
     virtual void clearSavedState();
 
     // Change current aspect
-    void setAspect(byte);
-    void setDistantAspect(byte);
+    void setAspect(byte, bool = true);
+    void setDistantAspect(byte, bool = true);
 
-    // Call once every PWM cycle
-    void dimm(void);
+    __attribute__((always_inline))
+    inline void dimm(const byte & ledIdx, const uint16_t & mask) {
+      auto & led = m_leds[ledIdx];
+      if (led.toggleDimmDirectionIn != 0) {
+        if (--led.toggleDimmDirectionIn == 0) {
+          if (m_ledState & mask) { // bit was on
+            m_ledState &= ~mask;
+          } else {
+            m_ledState |= mask;
+          }
+        }
+      }
+
+      if (m_ledState & mask) {
+        if (led.dimmValue < DIMM_STEPS) {
+          led.dimmValue += 1;
+        }
+      } else {
+        if (led.dimmValue > 0) {
+          led.dimmValue -= 1;
+        }
+      }
+    };
 
     // Signal configuration checks
     bool isSignalConnected(void);

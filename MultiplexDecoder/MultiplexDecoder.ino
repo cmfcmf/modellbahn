@@ -18,6 +18,8 @@ constexpr byte DCC_PIN = 2;
 constexpr byte LED_PIN = 13;
 constexpr byte PROG_KEY = A6; // If changed, ADC configuration must also be changed!
 
+DigitalPin<LED_PIN> ledPin;
+
 constexpr byte NUM_SIGNALS = 4;
 
 #define PINS1  3,  4,  5,  6
@@ -46,8 +48,7 @@ void setup() {
   dcc.pin(DCC_PIN_EXT_INT_NUM, DCC_PIN, true);
   dcc.init(MAN_ID_DIY, 10, CV29_ACCESSORY_DECODER | CV29_OUTPUT_ADDRESS_MODE, 0);
 
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
+  ledPin.config(OUTPUT, LOW);
 
   Serial.begin(115200);
   while (!Serial) {};
@@ -75,15 +76,6 @@ void setup() {
     _signals[i]->begin();
   }
 
-
-  Serial.print("CHARLIE_CYCLE_LENGTH_US: "); Serial.println(CHARLIE_CYCLE_LENGTH_US);
-  Serial.print("DIMM_STEPS: "); Serial.println(DIMM_STEPS);
-  Serial.print("DIMM_TIME_US: "); Serial.println(DIMM_TIME_US);
-  Serial.print("PRESCALER: "); Serial.println(PRESCALER);
-  Serial.print("OCR1A_VALUE: "); Serial.println(OCR1A_VALUE);
-  // Serial.print("DIMM_CALLING_INTERVAL_US: "); Serial.print(DIMM_CALLING_INTERVAL_US / 0xffffffff); Serial.print(DIMM_CALLING_INTERVAL_US % 0xffffffff);
-  Serial.print("DIMM_UP_TOGGLE_DIMM_DIRECTION_IN: "); Serial.println(DIMM_UP_TOGGLE_DIMM_DIRECTION_IN);
-
   #if DEMO == 2
   // Important: Use analogRead before we configure the ADC into free-running mode below
   randomSeed(analogRead(A7));
@@ -92,23 +84,26 @@ void setup() {
   noInterrupts();
 
   /// Timer 1
-
-  // Important to explicitly set this to 0, because the Arduino init code sets it to non-zero!
-  TCCR1A = 0;
-
-  if (PRESCALER == 64) {
-    TCCR1B = (1 << CS11) | (1 << CS10);
-  } else {
-    // Make sure we do not accidentally supply an invalid prescaler.
-    while (true) {};
-  }
-  TCCR1B |= (1 << WGM12) /* CTC */;
-
+  // Used for dimming up and down, it also triggers ADC measurements (configured below)
+  TCCR1A = (0 << WGM11) | (0 << WGM10); // CTC mode
+  TCCR1B = (1 << CS12) | (0 << CS11) | (0 << CS10) // prescaler 256
+    | (1 << WGM12); // CTC mode
   OCR1A = OCR1A_VALUE;
-  TIMSK1 |= 1 << OCIE1A;
+  TIMSK1 |= (1 << OCIE1A); // enable the CTC interrupt handler
+
+  /// Timer 2
+  // Used for charlieplexing the leds. It runs every 120us
+
+  // It is important to explicitly overwrite all registers, because the Arduino init code sets some to non-zero!
+  TCCR2A = (1 << WGM21) | (0 << WGM20); // CTC
+  TCCR2B = (0 << WGM22) // CTC
+    | (1 << CS22) | (0 << CS21) | (0 << CS20); // prescaler 64
+  OCR2A = OCR2A_VALUE;
+  TIMSK2 |= (1 << OCIE2A); // enable interrupt
+  ASSR = 0; // disable async operation
 
   /// ADC
-
+  // Used to read the programming button.
   ADMUX = (0 << REFS1) | (1 << REFS0) // AVCC as voltage reference
     | (1 << ADLAR) // left-adjust: upper 8 of 10 bits of ADC results stored in ADCH
     | (0 << MUX3) | (1 << MUX2) | (1 << MUX1) | (0 << MUX0); // select ADC6 (A6)
@@ -120,9 +115,9 @@ void setup() {
     // This is achieved by configuring the ADC prescaler accordingly.
     // 16000000 / 200000 = 160 / 2 = 80 -> nearest prescaler values are 64 and 128
     // prescaler 128: 16000000/128 = 125000 (ok)
-    // prescaler  64: 16000000     = 250000 (too high)
+    // prescaler  64: 16000000/64  = 250000 (too high)
     | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0); // ADC prescaler 128
-  ADCSRB = (0 << ADTS2) | (0 << ADTS1) | (0 << ADTS0); // free running mode
+  ADCSRB = (1 << ADTS2) | (0 << ADTS1) | (0 << ADTS0); // timer 0 overflow (~1000 times per second)
 
   interrupts();
 }
@@ -139,7 +134,7 @@ template<byte LED> static inline void doCharlieplex(const byte & cur_dimm, byte 
     cur_led = LED + 1 == 12 ? 0 : LED + 1;
 }
 
-ISR(TIMER1_COMPA_vect) {
+ISR(TIMER2_COMPA_vect) {
   static byte cur_dimm = 0;
   static byte cur_led = 0;
 
@@ -188,6 +183,31 @@ ISR(TIMER1_COMPA_vect) {
   }
 }
 
+__attribute__((always_inline)) __attribute__((optimize("O3"))) __attribute__((optimize("unroll-loops")))
+inline void dimm() {
+  uint16_t mask = 1;
+  for (byte ledIdx = 0; ledIdx < NUM_LEDS; ledIdx++) {
+    for (byte signalIdx = 0; signalIdx < NUM_SIGNALS; signalIdx++) {
+      _signals[signalIdx]->dimm(ledIdx, mask);
+    }
+    mask <<= 1;
+  }
+}
+
+volatile uint8_t blinkCnt = 0;
+volatile uint8_t debounceCnt = 0;
+
+ISR(TIMER1_COMPA_vect) {
+  interrupts();
+
+  dimm();
+
+  blinkCnt++; // Deliberately overflow
+  if (debounceCnt > 0) {
+    debounceCnt--;
+  }
+}
+
 volatile bool programmingButtonPressed = false;
 
 ISR(ADC_vect) {
@@ -198,14 +218,6 @@ void loop() {
   dcc.process();
 
   handleProgramming();
-
-  static unsigned long lastDimm = 0;
-  if (millis() - lastDimm > DIMM_CALLING_INTERVAL_US / 1000) {
-    lastDimm = millis();
-    for (byte i = 0; i < NUM_SIGNALS; i++) {
-      _signals[i]->dimm();
-    }
-  }
 
   #if DEMO == 1
     cycleAspects();
@@ -260,25 +272,16 @@ void serialEvent() {
 }
 
 void handleProgramming() {
-  static unsigned long lastPress = 0;
-
-  if (programmingButtonPressed && millis() - lastPress > 500) {
-    lastPress = millis();
+  if (programmingButtonPressed && debounceCnt == 0) {
     programming = !programming;
-    if (programming) {
-      clearSavedState();
+    debounceCnt = 50;
+    if (!programming) {
+      ledPin.low();
     }
   }
 
   if (programming) {
-    static unsigned long lastBlink = 0;
-    static bool on = false;
-    if (millis() - lastBlink > 200) {
-      digitalWrite(LED_PIN, on = !on);
-      lastBlink = millis();
-    }
-  } else {
-    digitalWrite(LED_PIN, LOW);
+    ledPin.write(blinkCnt & (1 << 4));
   }
 }
 
@@ -352,9 +355,9 @@ void cycleAspects() {
   if (millis() - lastSwitch > 1000) {
     lastSwitch = millis();
     for (byte s = 0; s < NUM_SIGNALS; s++) {
-      _signals[s]->setAspect(nextAspect);
+      _signals[s]->setAspect(nextAspect, false);
       if (_signals[s]->isAdditionalDistantSignalConnected()) {
-          _signals[s]->setDistantAspect(nextDistantAspect);
+          _signals[s]->setDistantAspect(nextDistantAspect, false);
       }
     }
 

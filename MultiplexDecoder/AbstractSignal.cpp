@@ -1,9 +1,9 @@
-#pragma GCC optimize ("O3")
-#pragma GCC optimize ("unroll-loops")
-
 #include "AbstractSignal.h"
 #include "Config.h"
 #include <EEPROM.h>
+
+#pragma GCC optimize ("O3")
+#pragma GCC optimize ("unroll-loops")
 
 AbstractSignal::AbstractSignal() {
   m_id = AbstractSignal::nextId++;
@@ -69,14 +69,14 @@ void AbstractSignal::applySavedState() {
 
 #if DEMO == 2
 void AbstractSignal::setRandomAspect(void) {
-    setAspect(random(m_numAspects));
+    setAspect(random(m_numAspects), false);
     if (isAdditionalDistantSignalConnected()) {
-      setDistantAspect(random(m_numDistantAspects));
+      setDistantAspect(random(m_numDistantAspects), false);
     }
 }
 #endif
 
-void AbstractSignal::setAspect(byte aspectId) {
+void AbstractSignal::setAspect(byte aspectId, bool persist) {
   if (aspectId >= m_numAspects) {
     return;
   }
@@ -84,7 +84,9 @@ void AbstractSignal::setAspect(byte aspectId) {
   m_currentAspectIndex = aspectId;
   m_currentAspect = m_aspects[m_mapping[aspectId]];
 
-  saveState();
+  if (persist) {
+    saveState();
+  }
 
   if (!m_currentAspect.darkenDistantSignal) {
     // Apply distant signal aspect again in case it was darkened
@@ -98,7 +100,7 @@ void AbstractSignal::setAspect(byte aspectId) {
   }
 }
 
-void AbstractSignal::setDistantAspect(byte distantAspectId) {
+void AbstractSignal::setDistantAspect(byte distantAspectId, bool persist) {
   /*
   Serial.print("Trying to set distant signal to #");
   Serial.print(distantAspectId);
@@ -113,7 +115,9 @@ void AbstractSignal::setDistantAspect(byte distantAspectId) {
   m_currentDistantAspectIndex = distantAspectId;
   m_currentDistantAspect = m_aspects[m_distantMapping[distantAspectId]];
 
-  saveState();
+  if (persist) {
+    saveState();
+  }
 
   if (!m_currentAspect.darkenDistantSignal) {
     // Only dimm to new aspect if the distant signal currently isn't darkened.
@@ -153,32 +157,6 @@ void AbstractSignal::applyAspectChange(AspectMapping aspect) {
       }
     }
     mask = mask << 1L;
-  }
-}
-
-void AbstractSignal::dimm() {
-  uint16_t mask = 1;
-  for (byte ledIdx = 0; ledIdx < NUM_LEDS; ledIdx++, mask <<= 1) {
-    auto & led = m_leds[ledIdx];
-    if (led.toggleDimmDirectionIn != 0) {
-      if (--led.toggleDimmDirectionIn == 0) {
-        if (m_ledState & mask) { // bit was on
-          m_ledState &= ~mask;
-        } else {
-          m_ledState |= mask;
-        }
-      }
-    }
-
-    if (m_ledState & mask) {
-      if (led.dimmValue < DIMM_STEPS) {
-        led.dimmValue += 1;
-      }
-    } else {
-      if (led.dimmValue > 0) {
-        led.dimmValue -= 1;
-      }
-    }
   }
 }
 
