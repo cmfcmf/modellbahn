@@ -1,0 +1,41 @@
+{%- assign folder_path = page.path | split:"/" | pop -%}
+{%- assign folder_path = folder_path | join:"/" -%}
+
+{%- assign file_path = "/" | append: folder_path | append: "/" | append: include.name %}
+{%- assign file_extension = include.name | split: "." | last -%}
+{%- assign the_file = site.static_files | where_exp: "file","file.path == file_path" | first -%}
+
+{%- capture file_content -%}
+{%- include_relative {{ the_file.name }} -%}
+{%- endcapture -%}
+
+{%- if include.from_line or include.to_line -%}
+  {%- assign lines = file_content | split: "
+" -%}
+  {%- assign num_lines = lines | size -%}
+  {%- assign from_line = include.from_line | default: 1 -%}
+  {%- assign to_line = include.to_line | default: num_lines -%}
+  {%- assign offset = from_line | minus: 1 -%}
+  {%- assign limit = to_line | minus: offset -%}
+  {%- if from_line == to_line -%}
+    {%- assign footer_text = "Dargestellt ist nur Zeile " | append: from_line -%}
+  {%- else -%}
+    {%- assign footer_text = "Dargestellt sind nur Zeile " | append: from_line | append: " bis " | append: to_line  -%}
+  {%- endif -%}
+
+  {%- capture file_content -%}
+    {%- for line in lines offset:offset limit:limit -%}
+{{ line }}
+{% endfor -%}
+  {%- endcapture -%}
+{%- endif -%}
+
+{%- if file_extension == "h" or file_extension == "ino" or file_extension == "cpp" -%}
+  {%- highlight cpp linenos start_line=2 -%}
+    {{- file_content -}}
+  {%- endhighlight -%}
+{%- else %}
+  <h1>TODO: file_extension nicht unterstützt!</h1>
+{% endif -%}
+
+{%- include source.html text=footer_text name=include.name -%}

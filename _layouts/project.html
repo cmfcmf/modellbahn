@@ -33,7 +33,7 @@ layout: page
 <p>Enthaltene Dateien:</p>
 <ul>
 {%- for file in files -%}
-  <li><a href="https://github.com/{{ site.repository }}/blob/master/{{ file.path }}">{{ file.name }}</a></li>
+  <li><a href="https://github.com/{{ site.repository }}/blob/master/{{ file.path }}">{{ file.path | remove_first: "/" | remove_first: folder_path | remove_first: "/" }}</a></li>
 {%- endfor -%}
 </ul>
 {%- endif -%}

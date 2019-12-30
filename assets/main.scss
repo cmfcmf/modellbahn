@@ -14,3 +14,20 @@
         border-left: 4px solid #5cd709;
     }
 }
+
+figure.highlight {
+    & > pre {
+        padding: 0;
+    }
+    code {
+        table, pre {
+            border: none;
+            margin-bottom: 0;
+            font-size: 12px;
+        }
+        td {
+            padding: 0;
+            border: none;
+        }
+    }
+}
