@@ -5,11 +5,24 @@
 #pragma GCC optimize ("O3")
 #pragma GCC optimize ("unroll-loops")
 
-AbstractSignal::AbstractSignal() {
-  m_id = AbstractSignal::nextId++;
+AbstractSignal::AbstractSignal(const byte id) {
+  m_id = id;
 }
 
 AbstractSignal* AbstractSignal::begin() {
+  uint16_t addressMain;
+  uint16_t addressDistant;
+  EEPROM.get(m_id * SIGNAL_EEPROM_SIZE + 2, addressMain);
+  if (addressMain >= 2048) {
+    addressMain = 1;
+  }
+  m_addressMain = addressMain;
+  EEPROM.get(m_id * SIGNAL_EEPROM_SIZE + 4, addressDistant);
+  if (addressDistant >= 2048) {
+    addressDistant = 4;
+  }
+  m_addressDistant = addressDistant;
+
   detect();
 
   for (byte i = 0; i < NUM_LEDS; i++) {
@@ -26,16 +39,48 @@ AbstractSignal* AbstractSignal::begin() {
 
 void AbstractSignal::detect() {
 #if USE_SERIAL == 1
-  Serial.println(",---------------------------.");
-  Serial.print(  "| Signal   #");
-  Serial.print(m_id);
-  Serial.println("               |");
+  Serial.println("");
+  Serial.print(  "| Signal   #"); Serial.println(m_id);
+  Serial.print(  "| Address (main): "); Serial.println(m_addressMain);
+  Serial.print(  "| Address (distant): "); Serial.println(m_addressDistant);
 #endif
   detectMainSignal();
   detectDistantSignal();
-#if USE_SERIAL == 1
-  Serial.println("`---------------------------'");
-#endif
+}
+
+uint16_t AbstractSignal::getMainAddress() {
+  return m_addressMain;
+}
+
+uint16_t AbstractSignal::getDistantAddress() {
+  return m_addressDistant;
+}
+
+void AbstractSignal::setMainAddress(uint16_t address) {
+  m_addressMain = address;
+  EEPROM.put(m_id * SIGNAL_EEPROM_SIZE + 2, address);
+}
+
+void AbstractSignal::setDistantAddress(uint16_t address) {
+  m_addressDistant = address;
+  EEPROM.put(m_id * SIGNAL_EEPROM_SIZE + 4, address);
+}
+
+uint8_t AbstractSignal::getAspect(void) {
+  return m_currentAspectIndex;
+}
+
+uint8_t AbstractSignal::getDistantAspect(void) {
+  return m_currentDistantAspectIndex;
+}
+
+
+uint8_t AbstractSignal::getNumAspects() {
+  return m_numAspects;
+}
+
+uint8_t AbstractSignal::getNumDistantAspects() {
+  return m_numDistantAspects;
 }
 
 bool AbstractSignal::isSignalConnected(void) {
@@ -46,20 +91,20 @@ bool AbstractSignal::isAdditionalDistantSignalConnected(void) {
 }
 
 void AbstractSignal::clearSavedState() {
-  EEPROM.update(m_id * 2,     0);
-  EEPROM.update(m_id * 2 + 1, 0);
+  EEPROM.update(m_id * SIGNAL_EEPROM_SIZE,     0);
+  EEPROM.update(m_id * SIGNAL_EEPROM_SIZE + 1, 0);
 }
 
 void AbstractSignal::saveState() {
-  EEPROM.update(m_id * 2,     m_currentAspectIndex);
-  EEPROM.update(m_id * 2 + 1, m_currentDistantAspectIndex);
+  EEPROM.update(m_id * SIGNAL_EEPROM_SIZE,     m_currentAspectIndex);
+  EEPROM.update(m_id * SIGNAL_EEPROM_SIZE + 1, m_currentDistantAspectIndex);
 }
 
 void AbstractSignal::applySavedState() {
   byte aspectId;
   byte distantAspectId;
-  EEPROM.get(m_id * 2, aspectId);
-  EEPROM.get(m_id * 2 + 1, distantAspectId);
+  EEPROM.get(m_id * SIGNAL_EEPROM_SIZE, aspectId);
+  EEPROM.get(m_id * SIGNAL_EEPROM_SIZE + 1, distantAspectId);
   if (aspectId >= m_numAspects) {
     aspectId = 0;
   }
@@ -80,7 +125,7 @@ void AbstractSignal::setRandomAspect(void) {
 }
 #endif
 
-void AbstractSignal::setAspect(byte aspectId, bool persist) {
+void AbstractSignal::setAspect(byte aspectId, bool persist, bool ignoreDistantSignal) {
   if (aspectId >= m_numAspects) {
     return;
   }
@@ -92,19 +137,19 @@ void AbstractSignal::setAspect(byte aspectId, bool persist) {
     saveState();
   }
 
-  if (!m_currentAspect.darkenDistantSignal) {
+  if (!m_currentAspect.darkenDistantSignal && !ignoreDistantSignal) {
     // Apply distant signal aspect again in case it was darkened
     applyAspectChange(m_currentDistantAspect);
   }
 
   applyAspectChange(m_currentAspect);
-  if (m_currentAspect.darkenDistantSignal) {
+  if (m_currentAspect.darkenDistantSignal && !ignoreDistantSignal) {
     // Darken distant signal, but don't overwrite m_currentDistantAspect
     applyAspectChange(m_aspects[VR_DARK]);
   }
 }
 
-void AbstractSignal::setDistantAspect(byte distantAspectId, bool persist) {
+void AbstractSignal::setDistantAspect(byte distantAspectId, bool persist, uint8_t debug) {
   if (distantAspectId >= m_numDistantAspects) {
     return;
   }
@@ -116,9 +161,13 @@ void AbstractSignal::setDistantAspect(byte distantAspectId, bool persist) {
     saveState();
   }
 
-  if (!m_currentAspect.darkenDistantSignal) {
+  if (!m_currentAspect.darkenDistantSignal || debug == 1) {
     // Only dimm to new aspect if the distant signal currently isn't darkened.
     applyAspectChange(m_currentDistantAspect);
+  } else if (m_currentAspect.darkenDistantSignal && debug == 2) {
+    // If the distant signal is currently darkened, we normally do not need to
+    // make it dark again. This functionality is only used when cycling aspects while programming.
+    applyAspectChange(m_aspects[VR_DARK]);
   }
 }
 
@@ -156,5 +205,3 @@ void AbstractSignal::applyAspectChange(AspectMapping aspect) {
     mask = mask << 1L;
   }
 }
-
-byte AbstractSignal::nextId = 0;

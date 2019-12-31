@@ -9,20 +9,35 @@
 #pragma GCC optimize ("O3")
 #pragma GCC optimize ("unroll-loops")
 
+// aspect         | 1 byte
+// distantAspect  | 1 byte
+// addressMain    | 2 bytes
+// addressDistant | 2 bytes
+constexpr uint8_t SIGNAL_EEPROM_SIZE = 6;
+
 class AbstractSignal {
   friend class SignalBuilder;
   public:
-    AbstractSignal();
+    AbstractSignal(const byte);
 
-    // Call right after construction
     AbstractSignal* begin();
 
-    // Call when programming
     virtual void clearSavedState();
 
-    // Change current aspect
-    void setAspect(byte, bool = true);
-    void setDistantAspect(byte, bool = true);
+    void setAspect(byte, bool = true, bool = false);
+    void setDistantAspect(byte, bool = true, uint8_t = 0);
+
+    uint8_t getAspect(void);
+    uint8_t getDistantAspect(void);
+
+    uint8_t getNumAspects();
+    uint8_t getNumDistantAspects();
+
+    uint16_t getMainAddress(void);
+    uint16_t getDistantAddress(void);
+
+    void setMainAddress(uint16_t);
+    void setDistantAddress(uint16_t);
 
     __attribute__((always_inline))
     inline void dimm(const byte & ledIdx, const uint16_t & mask) {
@@ -48,7 +63,6 @@ class AbstractSignal {
       }
     };
 
-    // Signal configuration checks
     bool isSignalConnected(void);
     bool isAdditionalDistantSignalConnected(void);
 
@@ -108,7 +122,8 @@ class AbstractSignal {
     void applyAspectChange(AspectMapping);
 
     byte m_id;
-    static byte nextId;
+    uint16_t m_addressMain;
+    uint16_t m_addressDistant;
 
     byte m_numAspects = 0;
     byte *m_mapping = NULL;

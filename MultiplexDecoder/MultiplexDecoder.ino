@@ -1,7 +1,6 @@
 #pragma GCC optimize ("O3")
 #pragma GCC optimize ("unroll-loops")
 
-#include <EEPROM.h>
 #include "avr/wdt.h"
 
 #include <NmraDcc.h>
@@ -11,13 +10,19 @@
 
 NmraDcc dcc;
 
-bool programming = false;
+// id of the currently programmed signal * 2
+// the LSB determines whether the main or distant signal is programmed.
+// -1 = nothing currently programmed
+int8_t programmingTarget = -1;
+// Used while programming to cycle through the signal aspects.
+uint8_t programmingTargetNextAspect;
+// Used to restore the signal's aspect after programming.
+uint8_t programmingTargetOldAspect;
 
+volatile bool programmingButtonPressed = false;
 volatile uint8_t seconds = 0;
 volatile uint8_t quarterSeconds = 0;
 volatile uint8_t debounceCnt = 0;
-
-constexpr unsigned int EE_ADDRESS = 42;
 
 constexpr byte DCC_PIN_EXT_INT_NUM = 0;
 constexpr byte DCC_PIN = 2;
@@ -33,15 +38,14 @@ constexpr byte NUM_SIGNALS = 4;
 #define PINS3 12, 11, A0, A1
 #define PINS4 A2, A3, A4, A5
 
-Signal<PINS1>* signal1 = new Signal<PINS1>();
-Signal<PINS2>* signal2 = new Signal<PINS2>();
-Signal<PINS3>* signal3 = new Signal<PINS3>();
-Signal<PINS4>* signal4 = new Signal<PINS4>();
+Signal<PINS1> signal1 = Signal<PINS1>(0);
+Signal<PINS2> signal2 = Signal<PINS2>(1);
+Signal<PINS3> signal3 = Signal<PINS3>(2);
+Signal<PINS4> signal4 = Signal<PINS4>(3);
 
-AbstractSignal* _signals[NUM_SIGNALS] = {signal1, signal2, signal3, signal4};
+AbstractSignal* const _signals[NUM_SIGNALS] = {&signal1, &signal2, &signal3, &signal4};
 
 void handleProgramming();
-uint16_t getAddress();
 void setAddress(uint16_t);
 void clearSavedState();
 #if DEMO == 1
@@ -59,25 +63,25 @@ void setup() {
 #if USE_SERIAL == 1
   Serial.begin(115200);
   while (!Serial) {};
-  Serial.println("#===========================#");
-  Serial.println("# Starting...               #");
-  Serial.print  ("# Address: ");
-  const uint16_t address = getAddress();
-  Serial.print(address, DEC);
-  if (address < 10000) {
-    Serial.print(' ');
-  }
-  if (address < 1000) {
-    Serial.print(' ');
-  }
-  if (address < 100) {
-    Serial.print(' ');
-  }
-  if (address < 10) {
-    Serial.print(' ');
-  }
-  Serial.println("            #");
-  Serial.println("#===========================#");
+  Serial.println("#");
+  Serial.println("# DCC Multiplex Decoder");
+  Serial.println("#");
+  Serial.println("# Author: Christian Flach");
+  Serial.println("# Project URL: https://cmfcmf.github.io/modellbahn/decoder/multiplex");
+  Serial.println("# Compiled at: " __DATE__ ", " __TIME__);
+  Serial.println("#");
+
+  Serial.println("");
+  Serial.println("|");
+  Serial.println("| Serial Interface Commands");
+  Serial.println("|");
+  Serial.println("| 1 up to 9: Set 1st to 9th signal aspect");
+  Serial.println("| a up to d: Set only aspect of the 1st/2nd/3rd/4th signal");
+  Serial.println("| x: Set aspects of all signals");
+  Serial.println("| m: Toggle between setting aspects for both main and distant signal / only main signal / only distant signal");
+  Serial.println("| sXXX (where XXX is an integer): Set address to XXX, works only after the programming button was pressed");
+  Serial.println("|");
+  Serial.println("");
 #endif
 
   for (byte i = 0; i < NUM_SIGNALS; i++) {
@@ -91,6 +95,8 @@ void setup() {
 
   noInterrupts();
 
+  // It is important to explicitly overwrite all registers, because the Arduino init code sets some to non-zero!
+
   /// Timer 1
   // Used for dimming up and down, it also triggers ADC measurements (configured below)
   TCCR1A = (0 << WGM11) | (0 << WGM10); // CTC mode
@@ -101,8 +107,6 @@ void setup() {
 
   /// Timer 2
   // Used for charlieplexing the leds. It runs every 120us
-
-  // It is important to explicitly overwrite all registers, because the Arduino init code sets some to non-zero!
   TCCR2A = (1 << WGM21) | (0 << WGM20); // CTC
   TCCR2B = (0 << WGM22) // CTC
     | (1 << CS22) | (0 << CS21) | (0 << CS20); // prescaler 64
@@ -117,7 +121,7 @@ void setup() {
   // We never call wdt_reset() to make sure the watchdog is regularly triggered.
   MCUSR = 0;
   WDTCSR = (1 << WDCE) | (1 << WDE); // Allow changing other bits (for 4 cycles)
-  WDTCSR = (1 << WDP2) | (0 << WDP1) | (0 << WDP0) // every 0.25s
+  WDTCSR = (1 << WDP2) | (0 << WDP1) | (0 << WDP0) // every 250ms
     | (1 << WDIE); // enable interrupt
 
   /// ADC
@@ -155,10 +159,10 @@ template<byte LED> static inline void doCharlieplex(const byte & cur_dimm, byte 
     const CharlieLed led = AbstractSignal::leds[LED];
     const CharlieLed lastLed = AbstractSignal::leds[LED - 1 == -1 ? 11 : LED - 1];
 
-    signal1->charlieplex(cur_dimm, LED, led.r, led.c, lastLed.r, lastLed.c);
-    signal2->charlieplex(cur_dimm, LED, led.r, led.c, lastLed.r, lastLed.c);
-    signal3->charlieplex(cur_dimm, LED, led.r, led.c, lastLed.r, lastLed.c);
-    signal4->charlieplex(cur_dimm, LED, led.r, led.c, lastLed.r, lastLed.c);
+    signal1.charlieplex(cur_dimm, LED, led.r, led.c, lastLed.r, lastLed.c);
+    signal2.charlieplex(cur_dimm, LED, led.r, led.c, lastLed.r, lastLed.c);
+    signal3.charlieplex(cur_dimm, LED, led.r, led.c, lastLed.r, lastLed.c);
+    signal4.charlieplex(cur_dimm, LED, led.r, led.c, lastLed.r, lastLed.c);
 
     cur_led = LED + 1 == 12 ? 0 : LED + 1;
 }
@@ -228,8 +232,6 @@ ISR(TIMER1_COMPA_vect) {
   dimm();
 }
 
-volatile bool programmingButtonPressed = false;
-
 ISR(ADC_vect) {
   programmingButtonPressed = ADCH < ((1024 / 2) >> 2);
 }
@@ -246,6 +248,106 @@ void loop() {
   #endif
 }
 
+void findNextProgrammingTarget() {
+  if (programmingTarget >= 0) {
+    const auto & signal = _signals[programmingTarget / 2];
+    if (programmingTarget % 2 == 0) {
+      signal->setAspect(programmingTargetOldAspect, false, true);
+    } else {
+      signal->setDistantAspect(programmingTargetOldAspect, false, 2);
+    }
+  }
+
+  programmingTarget++;
+  programmingTargetNextAspect = 0;
+  for (; programmingTarget < NUM_SIGNALS * 2; programmingTarget++) {
+    const auto & signal = _signals[programmingTarget / 2];
+    if (programmingTarget % 2 == 0 && signal->isSignalConnected()) {
+      programmingTargetOldAspect = signal->getAspect();
+      return;
+    }
+    if (programmingTarget % 2 == 1 && signal->isAdditionalDistantSignalConnected()) {
+      programmingTargetOldAspect = signal->getDistantAspect();
+      return;
+    }
+  }
+  // No signal left, stop programming.
+  programmingTarget = -1;
+}
+
+void handleProgramming() {
+  if (programmingButtonPressed && debounceCnt == 0) {
+    findNextProgrammingTarget();
+    debounceCnt = 2;
+    if (programmingTarget == -1) {
+      ledPin.low();
+    }
+  }
+
+  if (programmingTarget >= 0) {
+    ledPin.write(quarterSeconds & (1 << 0));
+
+    static uint8_t lastSeconds = 0;
+    uint8_t currentSeconds = seconds; // use a local variable to avoid loading it twice due to its volatile modifier.
+    if (lastSeconds != currentSeconds) {
+      lastSeconds = currentSeconds;
+      const auto & signal = _signals[programmingTarget / 2];
+      if (programmingTarget % 2 == 0) {
+        signal->setAspect(programmingTargetNextAspect, false, true);
+        programmingTargetNextAspect = (programmingTargetNextAspect + 1) % signal->getNumAspects();
+      } else {
+        signal->setDistantAspect(programmingTargetNextAspect, false, 1);
+        programmingTargetNextAspect = (programmingTargetNextAspect + 1) % signal->getNumDistantAspects();
+      }
+    }
+  }
+}
+
+/**
+ * address: 1 to x
+ * direction: 0 or 1 (= red or green)
+ */
+void notifyDccAccTurnoutOutput(uint16_t address, uint8_t direction, uint8_t power) {
+  if (!power) {
+    // Ignore turn-off commands
+    return;
+  }
+
+  if (programmingTarget >= 0) {
+    // We re-use the button's debounceCnt variable for debouncing DCC packets.
+    // A controller often sends the same packet multiple times.
+    // That is why we need let some time pass after changing the programming
+    // target.
+    if (debounceCnt > 0) {
+      return;
+    }
+    debounceCnt = 3;
+
+    const auto & signal = _signals[programmingTarget / 2];
+    if (programmingTarget % 2 == 0) {
+      signal->setMainAddress(address);
+    } else {
+      signal->setDistantAddress(address);
+    }
+    findNextProgrammingTarget();
+    return;
+  }
+
+  for (uint8_t i = 0; i < NUM_SIGNALS; i++) {
+    const auto & signal = _signals[i];
+    const auto & minMainAddress = signal->getMainAddress();
+    const auto & maxMainAddress = minMainAddress + (signal->getNumAspects() + 1) / 2;
+    if (address >= minMainAddress && address < maxMainAddress) {
+      signal->setAspect((address - minMainAddress) * 2 + direction);
+    }
+    const auto & minDistantAddress = signal->getDistantAddress();
+    const auto & maxDistantAddress = minDistantAddress + (signal->getNumDistantAspects() + 1) / 2;
+    if (address >= minDistantAddress && address < maxDistantAddress) {
+      signal->setDistantAspect((address - minDistantAddress) * 2 + direction);
+    }
+  }
+}
+
 #if USE_SERIAL == 1
 void serialEvent() {
   static int8_t _signal = -1;
@@ -253,10 +355,16 @@ void serialEvent() {
   while (Serial.available()) {
     // get the new byte:
     char inChar = (char)Serial.read();
-    if (inChar == 's') {
+    if (inChar == 's' && programmingTarget >= -1) {
       uint16_t newAddress = Serial.parseInt();
       if (newAddress > 0) {
-        setAddress(newAddress);
+        const auto & signal = _signals[programmingTarget / 2];
+        if (programmingTarget % 2 == 0) {
+          signal->setMainAddress(newAddress);
+        } else {
+          signal->setDistantAddress(newAddress);
+        }
+        findNextProgrammingTarget();
       }
     }
     if (inChar >= 'a' && inChar <= 'a' + NUM_SIGNALS) {
@@ -269,8 +377,8 @@ void serialEvent() {
       if (mode == 2) {
         mode = -1;
       }
-    } else if (inChar >= '0' && inChar <= '9') {
-      inChar -= '0';
+    } else if (inChar >= '1' && inChar <= '9') {
+      inChar -= '1';
       if (_signal == -1) {
         for (byte i = 0; i < NUM_SIGNALS; i++) {
           if (mode >= 0) {
@@ -292,88 +400,6 @@ void serialEvent() {
   }
 }
 #endif
-
-void handleProgramming() {
-  if (programmingButtonPressed && debounceCnt == 0) {
-    programming = !programming;
-    debounceCnt = 2;
-    if (!programming) {
-      ledPin.low();
-    }
-  }
-
-  if (programming) {
-    ledPin.write(quarterSeconds & (1 << 0));
-  }
-}
-
-void setAspect(byte signalIdx, byte aspectIdx) {
-  byte i = 0;
-  for (byte s = 0; s < NUM_SIGNALS; s++) {
-    if (i == signalIdx) {
-      _signals[s]->setAspect(aspectIdx);
-
-#if USE_SERIAL == 1
-      Serial.print("SIGNAL ");
-      Serial.print(signalIdx);
-      Serial.print(" set to ");
-      Serial.println(aspectIdx);
-#endif
-    }
-    i++;
-    if (_signals[s]->isAdditionalDistantSignalConnected()) {
-      if (i == signalIdx) {
-        _signals[s]->setDistantAspect(aspectIdx);
-
-#if USE_SERIAL == 1
-        Serial.print("SIGNAL ");
-        Serial.print(signalIdx);
-        Serial.print(" set to ");
-        Serial.println(aspectIdx);
-#endif
-      }
-      i++;
-    }
-  }
-}
-
-void clearSavedState() {
-  for (byte i = 0; i < NUM_SIGNALS; i++) {
-    _signals[i]->clearSavedState();
-  }
-}
-
-void setAddress(uint16_t address) {
-#if USE_SERIAL == 1
-  Serial.print("Setting address to ");
-  Serial.println(address);
-#endif
-
-  EEPROM.update(EE_ADDRESS, address);
-  clearSavedState();
-}
-
-uint16_t getAddress() {
-  return EEPROM.read(EE_ADDRESS);
-}
-
-// This function is called whenever a normal DCC Turnout Packet is received
-void notifyDccAccState(__attribute__((unused)) uint16_t Addr, uint16_t BoardAddr, uint8_t OutputAddr, __attribute__((unused)) uint8_t State) {
-  if (programming) {
-    setAddress(BoardAddr);
-    programming = false;
-
-    return;
-  }
-
-  uint16_t addr = getAddress();
-  if (BoardAddr < addr) {
-    return;
-  }
-  uint16_t signalIdx = BoardAddr - addr;
-  byte aspectIdx = OutputAddr;
-  setAspect(signalIdx, aspectIdx);
-}
 
 #if DEMO == 1
 void cycleAspects() {

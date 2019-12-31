@@ -10,6 +10,8 @@
 template <uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4>
 class Signal : public AbstractSignal {
   public:
+    Signal(const byte id) : AbstractSignal(id) {};
+
     // Call in ISR
     // Because everything is const or a template parameter, the switch statements are optimized and pre-calculated.
     __attribute__((always_inline)) __attribute__((optimize("O0"))) // TODO: Why O0?
@@ -90,14 +92,14 @@ class Signal : public AbstractSignal {
 #endif
       if (!detectLed(leds[RED])) {
 #if USE_SERIAL == 1
-        Serial.println("NO               |");
+        Serial.println("NO");
 #endif
         return;
       }
 
       if (!detectLed(leds[YELLOW])) {
 #if USE_SERIAL == 1
-        Serial.println("YES - main       |");
+        Serial.println("YES - main");
 #endif
         m_numAspects = sizeof(hv_main)/sizeof(hv_main[0]);
         m_mapping = const_cast<byte *>(&hv_main[0]);
@@ -105,7 +107,7 @@ class Signal : public AbstractSignal {
       }
       if (!detectLed(leds[RED_RIGHT])) {
 #if USE_SERIAL == 1
-        Serial.println("YES - entry      |");
+        Serial.println("YES - entry");
 #endif
         m_numAspects = sizeof(hv_entry) / sizeof(hv_entry[0]);
         m_mapping = const_cast<byte *>(&hv_entry[0]);
@@ -113,7 +115,7 @@ class Signal : public AbstractSignal {
       }
 
 #if USE_SERIAL == 1
-      Serial.println("YES - departure  |");
+      Serial.println("YES - departure");
 #endif
       m_numAspects = sizeof(hv_departure) / sizeof(hv_departure[0]);
       m_mapping = const_cast<byte *>(&hv_departure[0]);
@@ -125,18 +127,18 @@ class Signal : public AbstractSignal {
 #endif
       if (!detectLed(leds[VR_YELLOW_TOP])) {
 #if USE_SERIAL == 1
-        Serial.println("NO               |");
+        Serial.println("NO");
 #endif
       } else {
         m_numDistantAspects = sizeof(hv_distant) / sizeof(hv_distant[0]);
         if (m_mapping) {
 #if USE_SERIAL == 1
-          Serial.println("YES - attached   |");
+          Serial.println("YES - attached");
 #endif
           m_distantMapping = const_cast<byte *>(&hv_distant[0]);
         } else {
 #if USE_SERIAL == 1
-          Serial.println("YES - standalone |");
+          Serial.println("YES - standalone");
 #endif
           m_mapping = const_cast<byte *>(&hv_distant[0]);
         }
