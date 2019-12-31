@@ -1,7 +1,11 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_ 1
 
-#define DEMO 1 // 0: no demo, 1: demo (cycle aspects), 2: demo (random aspects)
+#define DEMO 0       // 0: no demo, 1: demo (cycle aspects), 2: demo (random aspects)
+#define USE_SERIAL 1 // 0: no debug output on Serial, 1: debug output on Serial
+
+#define DARK_MAIN_SIGNAL_ASPECT    1 // 0: no support for darkening main signals, 1: enable darkening main signals
+#define DARK_DISTANT_SIGNAL_ASPECT 1 // 0: no support for darkening distant signals, 1: enable darkening distant signals
 
 constexpr int NUM_LEDS = 12;
 

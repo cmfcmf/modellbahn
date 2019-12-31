@@ -2,7 +2,7 @@
 #define SIGNAL_H_
 
 #include <Arduino.h>
-#include "Chaplex.h"
+#include "CharlieLed.h"
 #include "AspectMapping.h"
 #include "AbstractSignal.h"
 #include "DigitalPin.h"
@@ -85,41 +85,59 @@ class Signal : public AbstractSignal {
     };
   protected:
     void detectMainSignal() override {
+#if USE_SERIAL == 1
       Serial.print("| Main:    ");
+#endif
       if (!detectLed(leds[RED])) {
+#if USE_SERIAL == 1
         Serial.println("NO               |");
+#endif
         return;
       }
 
       if (!detectLed(leds[YELLOW])) {
+#if USE_SERIAL == 1
         Serial.println("YES - main       |");
+#endif
         m_numAspects = sizeof(hv_main)/sizeof(hv_main[0]);
         m_mapping = const_cast<byte *>(&hv_main[0]);
         return;
       }
       if (!detectLed(leds[RED_RIGHT])) {
+#if USE_SERIAL == 1
         Serial.println("YES - entry      |");
+#endif
         m_numAspects = sizeof(hv_entry) / sizeof(hv_entry[0]);
         m_mapping = const_cast<byte *>(&hv_entry[0]);
         return;
       }
 
+#if USE_SERIAL == 1
       Serial.println("YES - departure  |");
+#endif
       m_numAspects = sizeof(hv_departure) / sizeof(hv_departure[0]);
       m_mapping = const_cast<byte *>(&hv_departure[0]);
     };
 
     void detectDistantSignal() override {
+#if USE_SERIAL == 1
       Serial.print("| Distant: ");
+#endif
       if (!detectLed(leds[VR_YELLOW_TOP])) {
+#if USE_SERIAL == 1
         Serial.println("NO               |");
+#endif
       } else {
         m_numDistantAspects = sizeof(hv_distant) / sizeof(hv_distant[0]);
         if (m_mapping) {
+#if USE_SERIAL == 1
           Serial.println("YES - attached   |");
+#endif
           m_distantMapping = const_cast<byte *>(&hv_distant[0]);
         } else {
+#if USE_SERIAL == 1
           Serial.println("YES - standalone |");
+#endif
           m_mapping = const_cast<byte *>(&hv_distant[0]);
         }
       }
@@ -130,7 +148,7 @@ class Signal : public AbstractSignal {
     DigitalPin<pin3> m_pin3;
     DigitalPin<pin4> m_pin4;
 
-    inline bool detectLed(const charlieLed led) __attribute__((always_inline)) {
+    inline bool detectLed(const CharlieLed led) __attribute__((always_inline)) {
       m_pin1.config(INPUT, false); // All input without pullup
       m_pin2.config(INPUT, false);
       m_pin3.config(INPUT, false);

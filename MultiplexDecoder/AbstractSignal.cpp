@@ -25,13 +25,17 @@ AbstractSignal* AbstractSignal::begin() {
 }
 
 void AbstractSignal::detect() {
+#if USE_SERIAL == 1
   Serial.println(",---------------------------.");
   Serial.print(  "| Signal   #");
   Serial.print(m_id);
   Serial.println("               |");
+#endif
   detectMainSignal();
   detectDistantSignal();
+#if USE_SERIAL == 1
   Serial.println("`---------------------------'");
+#endif
 }
 
 bool AbstractSignal::isSignalConnected(void) {
@@ -101,13 +105,6 @@ void AbstractSignal::setAspect(byte aspectId, bool persist) {
 }
 
 void AbstractSignal::setDistantAspect(byte distantAspectId, bool persist) {
-  /*
-  Serial.print("Trying to set distant signal to #");
-  Serial.print(distantAspectId);
-  Serial.print(" of ");
-  Serial.print(m_numDistantAspects);
-  Serial.println(".");
-  */
   if (distantAspectId >= m_numDistantAspects) {
     return;
   }

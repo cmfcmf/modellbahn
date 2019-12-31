@@ -14,9 +14,40 @@ Angeschlossene Signale werden automatisiert erkannt (allerdings derzeit nur
 HV-Signale, KS-Signale wären theoretisch auch möglich, habe ich aber nicht
 zum testen da).
 
-Wenn man das Projekt in der Arduino IDE öffnet, muss man in der "Config.h"-Datei
-noch den Demo-Modus abschalten, indem man die Zeile auf `#define DEMO 0` ändert.
-Im Demo-Modus schalten die einzelnen Signalbegriffe auch ohne DCC-Signal im
-Wechsel durch.
+## Hardware
 
-{%- include code_view.html name="Config.h" from_line=4 to_line=4 -%}
+TODO
+
+## Software
+
+Die Software ist für die Arduino-IDE geschrieben und muss mittels dieser in den
+Arduino Nano übertragen werden. Falls die Übertragung nicht funktioniert, sollte
+man nochmal sichergehen, dass im Menü unter `Werkzeuge -> Board` `Arduino Nano`
+ausgewählt und unter `Werkzeuge -> Prozessor` `Atmega328P` oder `Atmega328P (Old Bootloader)`
+ausgewählt ist. Ob der Bootloader des Arduinos neu oder "old" ist, lässt sich
+am besten durch probieren herausfinden; wenn die Übertragung klappt, hat man
+den richtigen Eintrag ausgewählt.
+
+### Konfigurationsoptionen
+
+Einige Optionen sind nur beim Programmieren des Arduinos und nicht im
+späteren Betrieb einstellbar. Die notwendigen Einstellungen befinden sich
+allesamt in der `Config.h`-Datei und müssen angepasst werden, bevor der
+Arduino programmiert wird.
+
+- **DEMO**
+  - **0**: Normaler Betrieb
+  - **1**: Demomodus aktiv: Alle Signale schalten nacheinander automatisch ihre Signalbegriffe durch.
+  - **2**: Demomodus aktiv: Alle Signale schalten zufällige Signalbegriffe durcheinander.
+- **DARK_MAIN_SIGNAL_ASPECT**
+  - **0**: Hauptsignale können nicht dunkel geschaltet werden.
+  - **1**: Hauptsignale können zusätzlich dunkel geschaltet werden.
+- **DARK_DISTANT_SIGNAL_ASPECT**
+  - **0**: Vorsignale können nicht dunkel geschaltet werden
+    (**steht das Hauptsignal auf rot, wird das Vorsignal aber in jedem Fall dunkel geschaltet!**).
+  - **1**: Vorsignale können zusätzlich dunkel geschaltet werden.
+- **USE_SERIAL**
+  - **0**: Keine Debug-Ausgaben über den seriellen Anschluss.
+  - **1**: Zusätzliche Debug-Ausgaben über den seriellen Anschluss.
+
+{%- include code_view.html name="Config.h" from_line=4 to_line=8 -%}

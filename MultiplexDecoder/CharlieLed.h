@@ -1,9 +1,9 @@
 #ifndef Chaplex_H_
 #define Chaplex_H_ 1
 
-typedef struct CharlieLed {
+typedef struct {
   const byte r;
-  const byte c; 
-} charlieLed;
+  const byte c;
+} CharlieLed;
 
 #endif

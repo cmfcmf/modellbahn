@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include "Config.h"
-#include "Chaplex.h"
+#include "CharlieLed.h"
 #include "AspectMapping.h"
 
 #pragma GCC optimize ("O3")
@@ -56,7 +56,7 @@ class AbstractSignal {
     void setRandomAspect(void);
     #endif
 
-    static constexpr charlieLed leds[NUM_LEDS] = {
+    static constexpr CharlieLed leds[NUM_LEDS] = {
       { 1 , 0 }, // 00
       { 1 , 2 }, // 01 (VR)
       { 1 , 3 }, // 02
@@ -120,9 +120,6 @@ class AbstractSignal {
     byte m_currentAspectIndex;
     byte m_currentDistantAspectIndex;
 
-    // Bitmask for the 12 LEDs indicating which should currently be on and which should be off.
-    uint16_t m_ledState = 0x0000;
-
     static constexpr uint16_t m_main_mask = (1L << RED) | (1L << GREEN) | (1L << YELLOW) | (1L << WHITE_TOP) | (1L << WHITE_BOTTOM) | (1L << RED_RIGHT);
     static constexpr uint16_t m_distant_mask = (1L << VR_YELLOW_TOP) | (1L << VR_YELLOW_BOTTOM) | (1L << VR_GREEN_TOP) | (1L << VR_GREEN_BOTTOM);
 
@@ -137,15 +134,30 @@ class AbstractSignal {
       {VR1,  (1L << VR_GREEN_TOP)     | (1L << VR_GREEN_BOTTOM),  m_distant_mask, false},
       {VR2,  (1L << VR_YELLOW_BOTTOM) | (1L << VR_GREEN_TOP),     m_distant_mask, false},
 
+#if DARK_MAIN_SIGNAL_ASPECT == 1
       {DARK,    0, m_main_mask, true},
+#endif
+#if DARK_DISTANT_SIGNAL_ASPECT == 1
       {VR_DARK, 0, m_distant_mask, false}
+#endif
     };
 
+#if DARK_MAIN_SIGNAL_ASPECT == 1
     const byte hv_main[3]      = {HP0,  HP1,           DARK};
     const byte hv_entry[4]     = {HP0,  HP1, HP2,      DARK};
     const byte hv_departure[5] = {HP00, HP1, HP2, SH1, DARK};
+#else
+    const byte hv_main[2]      = {HP0,  HP1,         };
+    const byte hv_entry[3]     = {HP0,  HP1, HP2,    };
+    const byte hv_departure[4] = {HP00, HP1, HP2, SH1};
+#endif
+#if DARK_DISTANT_SIGNAL_ASPECT == 1
     const byte hv_distant[4]   = {VR0,  VR1, VR2,      VR_DARK};
-
+#else
+    const byte hv_distant[3]   = {VR0,  VR1, VR2};
+#endif
+    // Bitmask for the 12 LEDs indicating which should currently be on and which should be off.
+    uint16_t m_ledState = 0x0000;
     struct {
       byte toggleDimmDirectionIn;     // Zeit bis zum nächsten Wechsel
       byte dimmValue; // current dimm value

@@ -1,15 +1,21 @@
 #pragma GCC optimize ("O3")
 #pragma GCC optimize ("unroll-loops")
 
+#include <EEPROM.h>
+#include "avr/wdt.h"
+
 #include <NmraDcc.h>
 #include "Config.h"
 #include "AbstractSignal.h"
 #include "Signal.h"
-#include <EEPROM.h>
 
 NmraDcc dcc;
 
 bool programming = false;
+
+volatile uint8_t seconds = 0;
+volatile uint8_t quarterSeconds = 0;
+volatile uint8_t debounceCnt = 0;
 
 constexpr unsigned int EE_ADDRESS = 42;
 
@@ -50,6 +56,7 @@ void setup() {
 
   ledPin.config(OUTPUT, LOW);
 
+#if USE_SERIAL == 1
   Serial.begin(115200);
   while (!Serial) {};
   Serial.println("#===========================#");
@@ -71,6 +78,7 @@ void setup() {
   }
   Serial.println("            #");
   Serial.println("#===========================#");
+#endif
 
   for (byte i = 0; i < NUM_SIGNALS; i++) {
     _signals[i]->begin();
@@ -102,6 +110,16 @@ void setup() {
   TIMSK2 |= (1 << OCIE2A); // enable interrupt
   ASSR = 0; // disable async operation
 
+  /// Watchdog
+  // Used for rough timing, like on-board led blink frequency and button debouncing.
+  // Enable the watchdog timer, but do not reset the controller on overflow.
+  // Instead, trigger the WDT interrupt.
+  // We never call wdt_reset() to make sure the watchdog is regularly triggered.
+  MCUSR = 0;
+  WDTCSR = (1 << WDCE) | (1 << WDE); // Allow changing other bits (for 4 cycles)
+  WDTCSR = (1 << WDP2) | (0 << WDP1) | (0 << WDP0) // every 0.25s
+    | (1 << WDIE); // enable interrupt
+
   /// ADC
   // Used to read the programming button.
   ADMUX = (0 << REFS1) | (1 << REFS0) // AVCC as voltage reference
@@ -122,9 +140,20 @@ void setup() {
   interrupts();
 }
 
+ISR(WDT_vect) {
+  const_cast<uint8_t &>(quarterSeconds)++; // Deliberately overflow
+  if (const_cast<uint8_t &>(quarterSeconds) % 4 == 0) {
+    seconds++; // Deliberately overflow
+  }
+
+  if (const_cast<uint8_t &>(debounceCnt) > 0) {
+    const_cast<uint8_t &>(debounceCnt)--;
+  }
+}
+
 template<byte LED> static inline void doCharlieplex(const byte & cur_dimm, byte & cur_led) {
-    const charlieLed led = AbstractSignal::leds[LED];
-    const charlieLed lastLed = AbstractSignal::leds[LED - 1 == -1 ? 11 : LED - 1];
+    const CharlieLed led = AbstractSignal::leds[LED];
+    const CharlieLed lastLed = AbstractSignal::leds[LED - 1 == -1 ? 11 : LED - 1];
 
     signal1->charlieplex(cur_dimm, LED, led.r, led.c, lastLed.r, lastLed.c);
     signal2->charlieplex(cur_dimm, LED, led.r, led.c, lastLed.r, lastLed.c);
@@ -194,18 +223,9 @@ inline void dimm() {
   }
 }
 
-volatile uint8_t blinkCnt = 0;
-volatile uint8_t debounceCnt = 0;
-
 ISR(TIMER1_COMPA_vect) {
   interrupts();
-
   dimm();
-
-  blinkCnt++; // Deliberately overflow
-  if (debounceCnt > 0) {
-    debounceCnt--;
-  }
 }
 
 volatile bool programmingButtonPressed = false;
@@ -226,6 +246,7 @@ void loop() {
   #endif
 }
 
+#if USE_SERIAL == 1
 void serialEvent() {
   static int8_t _signal = -1;
   static int8_t mode = 0;
@@ -270,18 +291,19 @@ void serialEvent() {
     }
   }
 }
+#endif
 
 void handleProgramming() {
   if (programmingButtonPressed && debounceCnt == 0) {
     programming = !programming;
-    debounceCnt = 50;
+    debounceCnt = 2;
     if (!programming) {
       ledPin.low();
     }
   }
 
   if (programming) {
-    ledPin.write(blinkCnt & (1 << 4));
+    ledPin.write(quarterSeconds & (1 << 0));
   }
 }
 
@@ -291,20 +313,24 @@ void setAspect(byte signalIdx, byte aspectIdx) {
     if (i == signalIdx) {
       _signals[s]->setAspect(aspectIdx);
 
+#if USE_SERIAL == 1
       Serial.print("SIGNAL ");
       Serial.print(signalIdx);
       Serial.print(" set to ");
       Serial.println(aspectIdx);
+#endif
     }
     i++;
     if (_signals[s]->isAdditionalDistantSignalConnected()) {
       if (i == signalIdx) {
         _signals[s]->setDistantAspect(aspectIdx);
 
+#if USE_SERIAL == 1
         Serial.print("SIGNAL ");
         Serial.print(signalIdx);
         Serial.print(" set to ");
         Serial.println(aspectIdx);
+#endif
       }
       i++;
     }
@@ -318,8 +344,10 @@ void clearSavedState() {
 }
 
 void setAddress(uint16_t address) {
+#if USE_SERIAL == 1
   Serial.print("Setting address to ");
   Serial.println(address);
+#endif
 
   EEPROM.update(EE_ADDRESS, address);
   clearSavedState();
@@ -349,11 +377,12 @@ void notifyDccAccState(__attribute__((unused)) uint16_t Addr, uint16_t BoardAddr
 
 #if DEMO == 1
 void cycleAspects() {
-  static unsigned long lastSwitch = 0;
   static byte nextAspect = 0;
   static byte nextDistantAspect = 0;
-  if (millis() - lastSwitch > 1000) {
-    lastSwitch = millis();
+  static uint8_t lastSeconds = 0;
+  uint8_t currentSeconds = seconds; // use a local variable to avoid loading it twice due to its volatile modifier.
+  if (lastSeconds != currentSeconds) {
+    lastSeconds = currentSeconds;
     for (byte s = 0; s < NUM_SIGNALS; s++) {
       _signals[s]->setAspect(nextAspect, false);
       if (_signals[s]->isAdditionalDistantSignalConnected()) {
@@ -367,9 +396,10 @@ void cycleAspects() {
 }
 #elif DEMO == 2
 void randomAspects() {
-  static unsigned long lastSwitch = 0;
-  if (millis() - lastSwitch > 1000) {
-    lastSwitch = millis();
+  static uint8_t lastSeconds = 0;
+  uint8_t currentSeconds = seconds; // use a local variable to avoid loading it twice due to its volatile modifier.
+  if (lastSeconds != currentSeconds) {
+    lastSeconds = currentSeconds;
     for (byte s = 0; s < NUM_SIGNALS; s++) {
       _signals[s]->setRandomAspect();
     }
