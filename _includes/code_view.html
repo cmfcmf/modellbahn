@@ -9,6 +9,8 @@
 {%- include_relative {{ the_file.name }} -%}
 {%- endcapture -%}
 
+{%- assign footer_text = include.name -%}
+
 {%- if include.from_line or include.to_line -%}
   {%- assign lines = file_content | split: "
 " -%}
@@ -18,9 +20,9 @@
   {%- assign offset = from_line | minus: 1 -%}
   {%- assign limit = to_line | minus: offset -%}
   {%- if from_line == to_line -%}
-    {%- assign footer_text = "Dargestellt ist nur Zeile " | append: from_line -%}
+    {%- assign footer_text = footer_text | append: " | dargestellt ist nur Zeile " | append: from_line -%}
   {%- else -%}
-    {%- assign footer_text = "Dargestellt sind nur Zeile " | append: from_line | append: " bis " | append: to_line  -%}
+    {%- assign footer_text = footer_text | append: " | dargestellt sind nur Zeile " | append: from_line | append: " bis " | append: to_line  -%}
   {%- endif -%}
 
   {%- capture file_content -%}
