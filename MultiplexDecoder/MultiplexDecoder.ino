@@ -35,8 +35,8 @@ constexpr byte NUM_SIGNALS = 4;
 
 #define PINS1  3,  4,  5,  6
 #define PINS2  7,  8,  9, 10
-#define PINS3 12, 11, A0, A1
-#define PINS4 A2, A3, A4, A5
+#define PINS3 A2, A3, A4, A5
+#define PINS4 12, 11, A0, A1
 
 Signal<PINS1> signal1 = Signal<PINS1>(0);
 Signal<PINS2> signal2 = Signal<PINS2>(1);

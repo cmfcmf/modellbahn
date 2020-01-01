@@ -71,31 +71,18 @@ class AbstractSignal {
     #endif
 
     static constexpr CharlieLed leds[NUM_LEDS] = {
-      { 1 , 0 }, // 00
-      { 1 , 2 }, // 01 (VR)
-      { 1 , 3 }, // 02
-      { 0 , 1 }, // 03
-      { 2 , 1 }, // 04 (VR)
-      { 3 , 1 }, // 05
-      { 0 , 2 }, // 06 (VR)
-      { 0 , 3 }, // 07
-      { 2 , 0 }, // 08 (VR)
-      { 3 , 0 }, // 09
-      { 2 , 3 }, // 10
-      { 3 , 2 }  // 11
-    };
-
-    enum SignalAspects {
-      HP0 = 0,
-      HP1 = 1,
-      HP2 = 2,
-      SH1 = 3,
-      HP00 = 4,
-      VR0 = 5,
-      VR1 = 6,
-      VR2 = 7,
-      DARK = 8,
-      VR_DARK = 9,
+      { 0 , 3 }, // 00
+      { 0 , 1 }, // 01 (VR)
+      { 0 , 2 }, // 02
+      { 3 , 0 }, // 03
+      { 1 , 0 }, // 04 (VR)
+      { 2 , 0 }, // 05
+      { 3 , 1 }, // 06 (VR)
+      { 3 , 2 }, // 07
+      { 1 , 3 }, // 08 (VR)
+      { 2 , 3 }, // 09
+      { 1 , 2 }, // 10
+      { 2 , 1 }  // 11
     };
 
     enum SIGNAL_LED_MAPPINGS {
@@ -138,22 +125,37 @@ class AbstractSignal {
     static constexpr uint16_t m_main_mask = (1L << RED) | (1L << GREEN) | (1L << YELLOW) | (1L << WHITE_TOP) | (1L << WHITE_BOTTOM) | (1L << RED_RIGHT);
     static constexpr uint16_t m_distant_mask = (1L << VR_YELLOW_TOP) | (1L << VR_YELLOW_BOTTOM) | (1L << VR_GREEN_TOP) | (1L << VR_GREEN_BOTTOM);
 
-    const AspectMapping m_aspects[10] = {
-      {HP0,  (1L << RED),                                              m_main_mask, true},
-      {HP1,  (1L << GREEN),                                            m_main_mask, false},
-      {HP2,  (1L << GREEN) | (1L << YELLOW),                           m_main_mask, false},
-      {SH1,  (1L << RED)   | (1L << WHITE_TOP) | (1L << WHITE_BOTTOM), m_main_mask, true},
-      {HP00, (1L << RED)   | (1L << RED_RIGHT),                        m_main_mask, true},
+    // Order of values must correspond to order of AspectMappings below.
+    enum SignalAspects {
+      HP0 = 0,
+      HP1 = 1,
+      HP2 = 2,
+      SH1 = 3,
+      HP00 = 4,
+      VR0 = 5,
+      VR1 = 6,
+      VR2 = 7,
+      DARK = 8,
+      VR_DARK = 9,
+    };
 
-      {VR0,  (1L << VR_YELLOW_TOP)    | (1L << VR_YELLOW_BOTTOM), m_distant_mask, false},
-      {VR1,  (1L << VR_GREEN_TOP)     | (1L << VR_GREEN_BOTTOM),  m_distant_mask, false},
-      {VR2,  (1L << VR_YELLOW_BOTTOM) | (1L << VR_GREEN_TOP),     m_distant_mask, false},
+    // Order of AspectMappings must correspond to order of SignalAspects above.
+    const AspectMapping m_aspects[10] = {
+      /* HP0  */ {(1L << RED),                                              m_main_mask,    true},
+      /* HP1  */ {(1L << GREEN),                                            m_main_mask,    false},
+      /* HP2  */ {(1L << GREEN) | (1L << YELLOW),                           m_main_mask,    false},
+      /* SH1  */ {(1L << RED)   | (1L << WHITE_TOP) | (1L << WHITE_BOTTOM), m_main_mask,    true},
+      /* HP00 */ {(1L << RED)   | (1L << RED_RIGHT),                        m_main_mask,    true},
+
+      /* VR0 */  {(1L << VR_YELLOW_TOP)    | (1L << VR_YELLOW_BOTTOM),      m_distant_mask, false},
+      /* VR1 */  {(1L << VR_GREEN_TOP)     | (1L << VR_GREEN_BOTTOM),       m_distant_mask, false},
+      /* VR2 */  {(1L << VR_YELLOW_BOTTOM) | (1L << VR_GREEN_TOP),          m_distant_mask, false},
 
 #if DARK_MAIN_SIGNAL_ASPECT == 1
-      {DARK,    0, m_main_mask, true},
+      /* DARK */ {0,                                                        m_main_mask,    true},
 #endif
 #if DARK_DISTANT_SIGNAL_ASPECT == 1
-      {VR_DARK, 0, m_distant_mask, false}
+      /* VR_DARK */ {0,                                                     m_distant_mask, false}
 #endif
     };
 
