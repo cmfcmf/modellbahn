@@ -14,8 +14,8 @@ layout: page
   </p>
 {%- endif -%}
 
-{{- content -}}
 
+{{- content -}}
 {%- assign folder_path = page.path | split:"/" | pop -%}
 {%- assign folder_path = folder_path | join:"/" -%}
 
@@ -41,6 +41,8 @@ layout: page
     {%- assign ext = file.path | split: "." | last -%}
     {%- if ext == "ino" %}
       <a href="https://www.arduino.cc/">[Arduino Projekt]</a>
+    {%- elsif ext == "kicad_pcb" -%}
+      <a href="https://kicad-pcb.org/">[KiCad Platinenlayout]</a>
     {%- elsif ext == "sch" -%}
       {%- include get_file_content.html name=relative_path -%}
       {%- if file_content contains "EESchema" -%}

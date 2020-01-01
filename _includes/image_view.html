@@ -1,0 +1,4 @@
+{%- assign folder_path = page.path | split:"/" | pop -%}
+{%- assign folder_path = folder_path | join:"/" -%}
+<img src="{{ folder_path | append: "/" | append: include.name | relative_url }}" />
+{% include source.html name=include.name %}

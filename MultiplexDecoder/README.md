@@ -38,7 +38,24 @@ Der Decoder basiert auf einem Arduino Nano.
 
 ## Hardware
 
-TODO
+Der Schaltplan ist sehr einfach gehalten und bietet Anschlussmöglichkeiten für sowohl
+die Stecker der Viessmann-Signale als auch eigene Verlängerungsleitungen. In allen
+Signalleitungen sind 680Ω-Widerstände verbaut. Damit leuchten die Signale immer noch
+sehr hell. Das DCC-Signal wird über einen 6N137-Optokoppler eingelesen.
+Die Stromversorgung geschieht an einem separaten Eingang über einen Gleichrichter
+mit nachgeschaltetem 7805-Linearregler. Man kann beide Eingänge auch parallel schalten,
+wenn man keine separate Stromversorgung benutzen möchte.
+Der Programmierknopf ist an A6 angeschlossen. Da dieser Eingang nicht über einen
+internen Pull-Up-Widerstand verfügt, ist dieser extern vorgesehen.
+
+{%- include pdf_view.html name="Hardware/Multiplexdecoder.pdf" -%}
+
+Eine abgespeckte Version der Platine habe ich derzeit auf Lochraster aufgebaut.
+Aufgrund der einfachen Schaltung ging das flott von der Hand. Eine "professionell"
+gelayoutete Platine habe ich ebenfalls erstellt, aber noch nicht fertigen lassen
+(der Arduino fehlt im 3D-Bild):
+
+{%- include image_view.html name="Hardware/Multiplexdecoder.png" -%}
 
 ## Software
 
