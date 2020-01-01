@@ -1,0 +1,10 @@
+{%- assign folder_path = page.path | split:"/" | pop -%}
+{%- assign folder_path = folder_path | join:"/" -%}
+
+{%- assign file_path = "/" | append: folder_path | append: "/" | append: include.name %}
+{%- assign the_file = site.static_files | where_exp: "file","file.path == file_path" | first -%}
+{%- assign relative_path = the_file.path | remove_first: "/" | remove_first: folder_path | remove_first: "/" -%}
+
+{%- capture file_content -%}
+{%- include_relative {{ relative_path }} -%}
+{%- endcapture -%}

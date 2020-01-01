@@ -3,11 +3,8 @@
 
 {%- assign file_path = "/" | append: folder_path | append: "/" | append: include.name %}
 {%- assign file_extension = include.name | split: "." | last -%}
-{%- assign the_file = site.static_files | where_exp: "file","file.path == file_path" | first -%}
 
-{%- capture file_content -%}
-{%- include_relative {{ the_file.name }} -%}
-{%- endcapture -%}
+{%- include get_file_content.html name=include.name -%}
 
 {%- assign footer_text = include.name -%}
 

@@ -33,7 +33,28 @@ layout: page
 <p>Enthaltene Dateien:</p>
 <ul>
 {%- for file in files -%}
-  <li><a href="https://github.com/{{ site.repository }}/blob/master/{{ file.path }}">{{ file.path | remove_first: "/" | remove_first: folder_path | remove_first: "/" }}</a></li>
+  {%- assign relative_path = file.path | remove_first: "/" | remove_first: folder_path | remove_first: "/" -%}
+  <li>
+    <a href="https://github.com/{{ site.repository }}/blob/master/{{ file.path }}">
+      {{ relative_path }}
+    </a>
+    {%- assign ext = file.path | split: "." | last -%}
+    {%- if ext == "ino" %}
+      <a href="https://www.arduino.cc/">[Arduino Projekt]</a>
+    {%- elsif ext == "sch" -%}
+      {%- include get_file_content.html name=relative_path -%}
+      {%- if file_content contains "EESchema" -%}
+        <a href="https://kicad-pcb.org/">[KiCad Schaltplan]</a>
+      {%- elsif file_content contains "eagle.dtd" -%}
+        <a href="https://www.autodesk.com/products/eagle/overview">[Eagle Schaltplan]</a>
+      {%- endif -%}
+    {%- elsif ext == "pro" -%}
+      {%- include get_file_content.html name=relative_path -%}
+      {%- if file_content contains "pcbnew" or file_content contains "eeschema" -%}
+        <a href="https://kicad-pcb.org/">[KiCad Projekt]</a>
+      {%- endif -%}
+    {%- endif -%}
+  </li>
 {%- endfor -%}
 </ul>
 {%- endif -%}
