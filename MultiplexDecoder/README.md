@@ -10,9 +10,31 @@ related_projects: [signale/multiplex]
 
 Es handelt sich um einen DCC-Decoder für 4 Multiplex-Signale von Viessmann.
 Der Decoder basiert auf einem Arduino Nano.
-Angeschlossene Signale werden automatisiert erkannt (allerdings derzeit nur
-HV-Signale, KS-Signale wären theoretisch auch möglich, habe ich aber nicht
-zum testen da).
+
+## Funktionen
+
+- Ansteuerung von bis zu 4 HV-Signalen, jeweils optional mit Vorsignal am Mast
+  - KS-Signale wären theoretisch auch möglich, sind aber noch nicht implementiert, da ich keine zum Testen da habe
+- Automatische Erkennung der Signaltypen beim Einschalten
+- Alle Signalbilder schaltbar, inklusive "dunkel"
+- Sanftes Überblenden zwischen den Signalbildern
+- Steuerung über DCC-Weichenbefehle
+- Separate Adressen pro Signal und Vorsignal
+
+### Adresseinstellung
+
+1. ggf. neue Signale anschließen und den Dekoder neu starten,
+   indem der Reset-Knopf auf der Arduino-Platine gedruckt wird.
+   Dadurch werden die neu angeschlossenen Signale erkannt.
+2. Es darf nun kein Fahrbetrieb mehr stattfinden und keine (anderen) Weichen und Signale geschaltet werden!
+3. Den Adressprogrammierknopf einmal drücken -> die LED auf der Platine fängt an zu blinken.
+4. Das erste angeschlossene Hauptsignal fängt an, nacheinander alle Signalbilder durchzuschalten.
+5. Möchte man die Adresse des Signals nicht ändern, drückt man einfach den Adressprogrammierknopf nochmal.
+   Andernfalls sendet man einen Weichenbefehl mit der Digitalzentrale. Das Signal übernimmt dann die gesendete Adresse.
+6. Jetzt fängt das nächste Signal an alle Signalbilder durchzuschalten. War am Mast des Hauptsignals ein
+   Vorsignal angeschlossen, fängt dieses an die Signalbilder durchzuschalten.
+7. Nun sendet man die Adresse des nächsten Signals wie in Schritt 5 beschrieben.
+8. Wenn alle angeschlossenen Signale neue Adressen erhalten haben, hört die LED auf der Platine auf zu blinken.
 
 ## Hardware
 
