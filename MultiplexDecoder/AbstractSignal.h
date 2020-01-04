@@ -98,6 +98,13 @@ class AbstractSignal {
       VR_YELLOW_BOTTOM = 6,
       VR_GREEN_BOTTOM = 8,
     };
+
+    // Bitmask for the 12 LEDs indicating which should currently be on and which should be off.
+    uint16_t m_ledState = 0x0000;
+    struct {
+      uint8_t toggleDimmDirectionIn; // Ticks until next dimm direction change
+      uint8_t dimmValue;             // Current dimm value
+    } m_leds[NUM_LEDS];
   protected:
     void detect();
     virtual void detectMainSignal() = 0;
@@ -173,11 +180,5 @@ class AbstractSignal {
 #else
     const byte hv_distant[3]   = {VR0,  VR1, VR2};
 #endif
-    // Bitmask for the 12 LEDs indicating which should currently be on and which should be off.
-    uint16_t m_ledState = 0x0000;
-    struct {
-      byte toggleDimmDirectionIn;     // Zeit bis zum nächsten Wechsel
-      byte dimmValue; // current dimm value
-    } m_leds[NUM_LEDS];
 };
 #endif

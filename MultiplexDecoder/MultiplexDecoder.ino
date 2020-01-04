@@ -31,8 +31,6 @@ constexpr byte PROG_KEY = A6; // If changed, ADC configuration must also be chan
 
 DigitalPin<LED_PIN> ledPin;
 
-constexpr byte NUM_SIGNALS = 4;
-
 #define PINS1  3,  4,  5,  6
 #define PINS2  7,  8,  9, 10
 #define PINS3 A2, A3, A4, A5
@@ -45,13 +43,11 @@ Signal<PINS4> signal4 = Signal<PINS4>(3);
 
 AbstractSignal* const _signals[NUM_SIGNALS] = {&signal1, &signal2, &signal3, &signal4};
 
-void handleProgramming();
-void setAddress(uint16_t);
-void clearSavedState();
+static void handleProgramming();
 #if DEMO == 1
-void cycleAspects();
+static void cycleAspects();
 #elif DEMO == 2
-void randomAspects();
+static void randomAspects();
 #endif
 
 void setup() {
@@ -98,9 +94,9 @@ void setup() {
   // It is important to explicitly overwrite all registers, because the Arduino init code sets some to non-zero!
 
   /// Timer 1
-  // Used for dimming up and down, it also triggers ADC measurements (configured below)
+  // Used for dimming up and down
   TCCR1A = (0 << WGM11) | (0 << WGM10); // CTC mode
-  TCCR1B = (1 << CS12) | (0 << CS11) | (0 << CS10) // prescaler 256
+  TCCR1B = (0 << CS12) | (1 << CS11) | (1 << CS10) // prescaler 64
     | (1 << WGM12); // CTC mode
   OCR1A = OCR1A_VALUE;
   TIMSK1 |= (1 << OCIE1A); // enable the CTC interrupt handler
@@ -216,20 +212,73 @@ ISR(TIMER2_COMPA_vect) {
   }
 }
 
-__attribute__((always_inline)) __attribute__((optimize("O3"))) __attribute__((optimize("unroll-loops")))
-inline void dimm() {
-  uint16_t mask = 1;
-  for (byte ledIdx = 0; ledIdx < NUM_LEDS; ledIdx++) {
-    for (byte signalIdx = 0; signalIdx < NUM_SIGNALS; signalIdx++) {
-      _signals[signalIdx]->dimm(ledIdx, mask);
+template<typename S> static inline void doDimmInner(S & signal, const uint8_t & ledIdx, const uint16_t & mask) {
+  auto & led = signal.m_leds[ledIdx];
+  if (led.toggleDimmDirectionIn > 0) {
+    --led.toggleDimmDirectionIn;
+    if (led.toggleDimmDirectionIn == 0) {
+      if (signal.m_ledState & mask) { // bit was on
+        signal.m_ledState &= ~mask;
+      } else {
+        signal.m_ledState |= mask;
+      }
     }
-    mask <<= 1;
+  }
+
+  if (signal.m_ledState & mask) {
+    if (led.dimmValue < DIMM_STEPS) {
+      led.dimmValue += 1;
+    }
+  } else {
+    if (led.dimmValue > 0) {
+      led.dimmValue -= 1;
+    }
   }
 }
 
+template<uint8_t ledIdx> static inline void doDimm1() {
+  uint16_t mask = 1 << ledIdx;
+  doDimmInner<Signal<PINS1>>(signal1, ledIdx, mask);
+  doDimm1<ledIdx + 1>();
+};
+template<> inline void doDimm1<NUM_LEDS>() {}
+
+template<uint8_t ledIdx> static inline void doDimm2() {
+  uint16_t mask = 1 << ledIdx;
+  doDimmInner<Signal<PINS2>>(signal2, ledIdx, mask);
+  doDimm2<ledIdx + 1>();
+};
+template<> inline void doDimm2<NUM_LEDS>() {}
+
+template<uint8_t ledIdx> static inline void doDimm3() {
+  uint16_t mask = 1 << ledIdx;
+  doDimmInner<Signal<PINS3>>(signal3, ledIdx, mask);
+  doDimm3<ledIdx + 1>();
+};
+template<> inline void doDimm3<NUM_LEDS>() {}
+
+template<uint8_t ledIdx> static inline void doDimm4() {
+  uint16_t mask = 1 << ledIdx;
+  doDimmInner<Signal<PINS4>>(signal4, ledIdx, mask);
+  doDimm4<ledIdx + 1>();
+};
+template<> inline void doDimm4<NUM_LEDS>() {}
+
 ISR(TIMER1_COMPA_vect) {
-  interrupts();
-  dimm();
+  static uint8_t signalIdx = 0;
+  if (signalIdx == 0) {
+    doDimm1<0>();
+    signalIdx = 1;
+  } else if (signalIdx == 1) {
+    doDimm2<0>();
+    signalIdx = 2;
+  } else if (signalIdx == 2) {
+    doDimm3<0>();
+    signalIdx = 3;
+  } else {
+    doDimm4<0>();
+    signalIdx = 0;
+  }
 }
 
 ISR(ADC_vect) {
@@ -248,7 +297,7 @@ void loop() {
   #endif
 }
 
-void findNextProgrammingTarget() {
+static void findNextProgrammingTarget() {
   if (programmingTarget >= 0) {
     const auto & signal = _signals[programmingTarget / 2];
     if (programmingTarget % 2 == 0) {
@@ -275,7 +324,7 @@ void findNextProgrammingTarget() {
   programmingTarget = -1;
 }
 
-void handleProgramming() {
+static void handleProgramming() {
   if (programmingButtonPressed && debounceCnt == 0) {
     findNextProgrammingTarget();
     debounceCnt = 2;
@@ -402,7 +451,7 @@ void serialEvent() {
 #endif
 
 #if DEMO == 1
-void cycleAspects() {
+static void cycleAspects() {
   static byte nextAspect = 0;
   static byte nextDistantAspect = 0;
   static uint8_t lastSeconds = 0;
@@ -421,7 +470,7 @@ void cycleAspects() {
   }
 }
 #elif DEMO == 2
-void randomAspects() {
+static void randomAspects() {
   static uint8_t lastSeconds = 0;
   uint8_t currentSeconds = seconds; // use a local variable to avoid loading it twice due to its volatile modifier.
   if (lastSeconds != currentSeconds) {

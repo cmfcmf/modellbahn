@@ -7,6 +7,8 @@
 #define DARK_MAIN_SIGNAL_ASPECT    1 // 0: no support for darkening main signals, 1: enable darkening main signals
 #define DARK_DISTANT_SIGNAL_ASPECT 1 // 0: no support for darkening distant signals, 1: enable darkening distant signals
 
+constexpr byte NUM_SIGNALS = 4;
+
 constexpr int NUM_LEDS = 12;
 
 // Time it takes for all 12 charlieplexed leds to cycle through -> if this was 12ms, each led would light up for 1ms.
@@ -27,8 +29,8 @@ constexpr auto DIMM_CALLING_INTERVAL_US = DIMM_TIME_US / DIMM_STEPS;
 constexpr byte DIMM_UP_TOGGLE_DIMM_DIRECTION_IN = DIMM_TIME_US * 0.8 / DIMM_CALLING_INTERVAL_US;
 
 /// Timer 1
-constexpr auto TIMER1_PRESCALER = 256;
-constexpr uint16_t OCR1A_VALUE = DIMM_CALLING_INTERVAL_US * 16000000ULL / 1000ULL / 1000ULL / TIMER1_PRESCALER;
+constexpr auto TIMER1_PRESCALER = 64;
+constexpr uint16_t OCR1A_VALUE = DIMM_CALLING_INTERVAL_US * 16000000ULL / 1000ULL / 1000ULL / TIMER1_PRESCALER / NUM_SIGNALS;
 
 /// Timer 2
 constexpr auto TIMER2_PRESCALER = 64;
