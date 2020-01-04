@@ -7,6 +7,7 @@
 #include "Config.h"
 #include "AbstractSignal.h"
 #include "Signal.h"
+#include "Dimming.h"
 
 NmraDcc dcc;
 
@@ -30,11 +31,6 @@ constexpr byte LED_PIN = 13;
 constexpr byte PROG_KEY = A6; // If changed, ADC configuration must also be changed!
 
 DigitalPin<LED_PIN> ledPin;
-
-#define PINS1  3,  4,  5,  6
-#define PINS2  7,  8,  9, 10
-#define PINS3 A2, A3, A4, A5
-#define PINS4 12, 11, A0, A1
 
 Signal<PINS1> signal1 = Signal<PINS1>(0);
 Signal<PINS2> signal2 = Signal<PINS2>(1);
@@ -211,58 +207,6 @@ ISR(TIMER2_COMPA_vect) {
       return;
   }
 }
-
-template<typename S> static inline void doDimmInner(S & signal, const uint8_t & ledIdx, const uint16_t & mask) {
-  auto & led = signal.m_leds[ledIdx];
-  if (led.toggleDimmDirectionIn > 0) {
-    --led.toggleDimmDirectionIn;
-    if (led.toggleDimmDirectionIn == 0) {
-      if (signal.m_ledState & mask) { // bit was on
-        signal.m_ledState &= ~mask;
-      } else {
-        signal.m_ledState |= mask;
-      }
-    }
-  }
-
-  if (signal.m_ledState & mask) {
-    if (led.dimmValue < DIMM_STEPS) {
-      led.dimmValue += 1;
-    }
-  } else {
-    if (led.dimmValue > 0) {
-      led.dimmValue -= 1;
-    }
-  }
-}
-
-template<uint8_t ledIdx> static inline void doDimm1() {
-  uint16_t mask = 1 << ledIdx;
-  doDimmInner<Signal<PINS1>>(signal1, ledIdx, mask);
-  doDimm1<ledIdx + 1>();
-};
-template<> inline void doDimm1<NUM_LEDS>() {}
-
-template<uint8_t ledIdx> static inline void doDimm2() {
-  uint16_t mask = 1 << ledIdx;
-  doDimmInner<Signal<PINS2>>(signal2, ledIdx, mask);
-  doDimm2<ledIdx + 1>();
-};
-template<> inline void doDimm2<NUM_LEDS>() {}
-
-template<uint8_t ledIdx> static inline void doDimm3() {
-  uint16_t mask = 1 << ledIdx;
-  doDimmInner<Signal<PINS3>>(signal3, ledIdx, mask);
-  doDimm3<ledIdx + 1>();
-};
-template<> inline void doDimm3<NUM_LEDS>() {}
-
-template<uint8_t ledIdx> static inline void doDimm4() {
-  uint16_t mask = 1 << ledIdx;
-  doDimmInner<Signal<PINS4>>(signal4, ledIdx, mask);
-  doDimm4<ledIdx + 1>();
-};
-template<> inline void doDimm4<NUM_LEDS>() {}
 
 ISR(TIMER1_COMPA_vect) {
   static uint8_t signalIdx = 0;

@@ -37,5 +37,10 @@ constexpr auto TIMER2_PRESCALER = 64;
 constexpr uint8_t OCR2A_VALUE = CHARLIE_CYCLE_LENGTH_US * 16000000ULL / 1000ULL / 1000ULL / TIMER2_PRESCALER / NUM_LEDS;
 
 
+// Signal Pins
+#define PINS1  3,  4,  5,  6
+#define PINS2  7,  8,  9, 10
+#define PINS3 A2, A3, A4, A5
+#define PINS4 12, 11, A0, A1
 
 #endif
