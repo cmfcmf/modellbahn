@@ -148,37 +148,33 @@ class AbstractSignal {
 
     // Order of AspectMappings must correspond to order of SignalAspects above.
     const AspectMapping m_aspects[10] = {
-      /* HP0  */ {(1L << RED),                                              m_main_mask,    true},
+      /* HP0  */ {(1L << RED),                                              m_main_mask,    true },
       /* HP1  */ {(1L << GREEN),                                            m_main_mask,    false},
       /* HP2  */ {(1L << GREEN) | (1L << YELLOW),                           m_main_mask,    false},
-      /* SH1  */ {(1L << RED)   | (1L << WHITE_TOP) | (1L << WHITE_BOTTOM), m_main_mask,    true},
-      /* HP00 */ {(1L << RED)   | (1L << RED_RIGHT),                        m_main_mask,    true},
+      /* SH1  */ {(1L << RED)   | (1L << WHITE_TOP) | (1L << WHITE_BOTTOM), m_main_mask,    true },
+      /* HP00 */ {(1L << RED)   | (1L << RED_RIGHT),                        m_main_mask,    true },
 
       /* VR0 */  {(1L << VR_YELLOW_TOP)    | (1L << VR_YELLOW_BOTTOM),      m_distant_mask, false},
       /* VR1 */  {(1L << VR_GREEN_TOP)     | (1L << VR_GREEN_BOTTOM),       m_distant_mask, false},
       /* VR2 */  {(1L << VR_YELLOW_BOTTOM) | (1L << VR_GREEN_TOP),          m_distant_mask, false},
 
-#if DARK_MAIN_SIGNAL_ASPECT == 1
-      /* DARK */ {0,                                                        m_main_mask,    true},
-#endif
-#if DARK_DISTANT_SIGNAL_ASPECT == 1
+      /* DARK */ {0,                                                        m_main_mask,    true },
       /* VR_DARK */ {0,                                                     m_distant_mask, false}
-#endif
     };
 
 #if DARK_MAIN_SIGNAL_ASPECT == 1
-    const byte hv_main[3]      = {HP0,  HP1,           DARK};
-    const byte hv_entry[4]     = {HP0,  HP1, HP2,      DARK};
-    const byte hv_departure[5] = {HP00, HP1, HP2, SH1, DARK};
+    const byte hv_main[4]      = {HP0,  HP1, DARK, DARK           };
+    const byte hv_entry[4]     = {HP0,  HP1, DARK, HP2            };
+    const byte hv_departure[6] = {HP00, HP1, SH1,  HP2, DARK, DARK};
 #else
-    const byte hv_main[2]      = {HP0,  HP1,         };
-    const byte hv_entry[3]     = {HP0,  HP1, HP2,    };
-    const byte hv_departure[4] = {HP00, HP1, HP2, SH1};
+    const byte hv_main[2]      = {HP0,  HP1,          };
+    const byte hv_entry[4]     = {HP0,  HP1, DARK, HP2};
+    const byte hv_departure[4] = {HP00, HP1, SH1,  HP2};
 #endif
 #if DARK_DISTANT_SIGNAL_ASPECT == 1
-    const byte hv_distant[4]   = {VR0,  VR1, VR2,      VR_DARK};
+    const byte hv_distant[4]   = {VR0,  VR1, VR_DARK, VR2};
 #else
-    const byte hv_distant[3]   = {VR0,  VR1, VR2};
+    const byte hv_distant[4]   = {VR0,  VR1, VR_DARK, VR2};
 #endif
 };
 #endif
