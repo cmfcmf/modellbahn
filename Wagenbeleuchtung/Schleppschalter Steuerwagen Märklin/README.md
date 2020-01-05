@@ -2,6 +2,9 @@
 layout: project
 tags: [märklin, beleuchtung, wagenbeleuchtung, steuerwagen, kicad]
 permalink: beleuchtung/waggons/märklin-schleppschalter
+related_projects:
+  - beleuchtung/waggons/märklin-dosto
+  - beleuchtung/waggons/allgemein
 ---
 
 # Digitalisierung des Schleppschalters in Märklin Steuerwagen
@@ -15,4 +18,4 @@ Grundsätzlich gibt es drei Optionen:
 Der Anschluss des neuen Dekoders an die Schleppschalterplatine ist nicht trivial, wenn man das Spitzensignal nicht nur umschalten, sondern auch ausschalten können will.
 Nach ein paar Experimenten habe ich dafür folgende minimale Schaltung ermittelt, die aus zwei Dioden und zwei Widerständen besteht:
 
-{%- include pdf_view.html name="Schleppschalter Steuerwagen Märklin.pdf" -%}
+{%- include pdf_view.html name="Schleppschalter_Steuerwagen_Maerklin.pdf" -%}

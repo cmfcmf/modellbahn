@@ -3,7 +3,7 @@
 {% comment %}
 https://help.github.com/en/github/managing-files-in-a-repository/3d-file-viewer#embedding-your-model-elsewhere
 {% endcomment %}
-<script src="https://embed.github.com/view/3d/{{ site.repository }}/master/{{ "/" | append: folder_path | append: "/" | append: include.name }}?width=740"></script>
+<script src="https://embed.github.com/view/3d/{{ site.repository }}/master{{ "/" | append: folder_path | append: "/" | append: include.name }}?width=740"></script>
 <noscript>
   {%- include source.html -%}
 </noscript>

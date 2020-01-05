@@ -6,6 +6,9 @@ state: finished
 redirect_from:
   - beleuchtung/waggons/märklin-dosto-steuerwagen-43586
   - beleuchtung/waggons/märklin-dosto-43585-43584
+related_projects:
+  - beleuchtung/waggons/märklin-schleppschalter
+  - beleuchtung/waggons/allgemein
 ---
 
 # Beleuchtungsträger für Doppelstockwagen und -steuerwagen von Märklin (Artnr. 43586, 43585 und 43584)
