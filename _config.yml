@@ -17,6 +17,7 @@ theme: minima
 
 plugins:
   - jekyll-sitemap
+  - jekyll-redirect-from
 
 header_pages: [none] # cannot use an empty array here, because that is seen as not defined.
 
