@@ -61,7 +61,7 @@ layout: page
 </ul>
 {%- endif -%}
 
-{%- if page.related_projects -%}
+{%- if page.related_projects and page.related_projects != empty -%}
   <h2>Ähnliche/Zugehörige Projekte</h2>
   <ul>
     {%- for related_project_permalink in page.related_projects -%}
