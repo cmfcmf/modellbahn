@@ -12,7 +12,7 @@ Diese können natürlich nicht direkt mit dem Digitalsignal der Schiene verbunde
 Auch wenn man einen Dekoder benutzt, ist der direkte Anschluss nur bei speziellen, auf 12V vorbereiteten Dekodern möglich.
 Daher muss man in jedem Wagen eine kleine Schaltung einbauen, die das >20V Digitalsignal in 12V Gleichstrom umwandelt:
 
-{%- include pdf_view.html name="Wagonbeleuchtung Allgemein.pdf" -%}
+{%- include pdf_view.html name="Wagonbeleuchtung_Allgemein.pdf" -%}
 
 Nachdem das Digitalsignal über den Gleichrichter gleichgerichtet ist, folgt ein Elko zur Glättung und Überbrückung von dreckigen Schienenabschnitten.
 Damit die Schaltung beim Einschalten nicht zu viel Strom verbraucht (der Dekoder könnte ggf. kaputt gehen) ist vor dem Elko auf Plusseite
