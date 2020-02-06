@@ -2,6 +2,7 @@
 layout: project
 tags: [märklin, beleuchtung, wagenbeleuchtung, steuerwagen, kicad]
 permalink: beleuchtung/waggons/märklin-schleppschalter
+state: finished
 related_projects:
   - beleuchtung/waggons/märklin-dosto
   - beleuchtung/waggons/allgemein
