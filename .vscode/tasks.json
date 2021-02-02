@@ -4,6 +4,12 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "install",
+      "type": "shell",
+      "command": "bundle install",
+      "problemMatcher": []
+    },
+    {
       "label": "jekyll",
       "type": "shell",
       "command": "bundle exec jekyll serve --livereload",
