@@ -155,7 +155,7 @@ Um ein Design dauerhaft auf dem FPGA zu speichern, müssen wir den EEPROM auf de
    ![]({{ "/EP2C5T144/screenshots/27-program-eeprom.png" | relative_url }})
 2. Nun müssen wir über "Add File" die "VHDLTest.**pof**"-Datei auswählen:
    ![]({{ "/EP2C5T144/screenshots/28-add-file.png" | relative_url }})
-3. Schließlich wählen wir sowohol "Program/Configure" als auch "Verify" aus und klicken abschließend auf "Start":
+3. Schließlich wählen wir sowohl "Program/Configure" als auch "Verify" aus und klicken abschließend auf "Start":
    ![]({{ "/EP2C5T144/screenshots/29-program.png" | relative_url }})
 
 **Achtung:** Das Design wird erst gestartet, wenn man den USB-Blaster wieder in den JTAG-Port steckt oder ausstöpselt.
