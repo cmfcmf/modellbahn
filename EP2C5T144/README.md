@@ -30,7 +30,7 @@ Eigentlich ist der Schaltplan recht selbsterklärend. Fast alle Pins sind auf di
 ### Besondere Pins
 
 - `PIN144` ist über den Taster mit `GND` verbunden (falls der Taster benutzt werden soll, muss ein Pull-Up-Widerstand einprogrammiert werden).
-- `PIN17` ist mit dem `50mHz`-Oszillator verbunden.
+- `PIN17` ist mit dem `50MHz`-Oszillator verbunden.
 - `PIN3`, `PIN7`, `PIN9` sind jeweils über eine LED mit `VCC3.3` verbunden.
 
 ### Nicht nutzbare Pins
@@ -45,7 +45,7 @@ Diese Pins können daher nicht als I/O Pins benutzt werden. Man kann die 0Ω-Wid
 
 ## Programmierung
 
-Die Programmierung erfolgt mit der kostenlosen Quartus II Software. Allerdings unterstützten aktuelle Versionen den genutzten FPGA nicht mehr. **Die letzte Version, die den FPGA unterstützut, ist *Quartus 13.0SP1* **. Die Software kann hier heruntergeladen werden: https://fpgasoftware.intel.com/13.0sp1/?edition=subscription&platform=windows
+Die Programmierung erfolgt mit der kostenlosen Quartus II Software. Allerdings unterstützten aktuelle Versionen den genutzten FPGA nicht mehr. **Die letzte Version, die den FPGA unterstützut, ist *Quartus 13.0SP1***. Die Software kann hier heruntergeladen werden: <https://fpgasoftware.intel.com/13.0sp1/?edition=subscription&platform=windows>
 
 ### Setup 
 
