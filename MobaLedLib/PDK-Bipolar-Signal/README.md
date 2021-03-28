@@ -1,6 +1,6 @@
 ---
 layout: project
-tags: [arduino, arduino nano, mobaledlib]
+tags: [padauk, signale, mobaledlib]
 permalink: mobaledlib/bipolar-led-driver-pdk
 state: finished
 ---
