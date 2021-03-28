@@ -44,4 +44,4 @@ vollständige Auflistung findet man [im DCC++ Wiki](https://github.com/DccPlusPl
    wie bei Zentralen üblich ca. 4 mal nacheinander gesendet.
    - `ADRESSE` (0-511): Die Decoderadresse. 4 Weichen gehören zu einer Decoderadresse.
    - `WEICHE` (0-3): Die Weiche innerhalb des Decoders, die geschaltet werden soll.
-   - `RICHTUNG` (0-1): 0 entspricht "rot" oder "gerade", 1 entspricht "grün" oder "abzweigend".
+   - `RICHTUNG` (0-1): 0 entspricht "rot" oder "abzweigend", 1 entspricht "grün" oder "gerade".
