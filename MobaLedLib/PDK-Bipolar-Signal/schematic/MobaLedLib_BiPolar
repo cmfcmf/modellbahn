@@ -1,0 +1,11 @@
+Reference, Quantity, Value, Footprint, Datasheet
+C3 C4 ,2,"100n","Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm","~"
+D2 ,1,"LED","LED_THT:LED_D3.0mm","~"
+H1 H2 ,2,"MountingHole","MountingHole:MountingHole_3.2mm_M3_ISO7380","~"
+J5 ,1,"Conn_02x03_Odd_Even","Connector_IDC:IDC-Header_2x03_P2.54mm_Vertical","~"
+J6 J7 ,2,"Conn_01x02","TerminalBlock:TerminalBlock_bornier-2_P5.08mm","~"
+R6 ,1,"680","Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P2.54mm_Vertical","~"
+R7 ,1,"150","Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P7.62mm_Horizontal","~"
+R8 ,1,"1k","Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P2.54mm_Vertical","~"
+U3 ,1,"WS2811","Package_DIP:DIP-8_W7.62mm_Socket_LongPads","https://cdn-shop.adafruit.com/datasheets/WS2811.pdf"
+U4 ,1,"PFS173-S16","Display_7Segment:DA04-11SEKWA",""

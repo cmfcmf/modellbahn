@@ -1,0 +1,21 @@
+{
+  "C_Cpp.default.compilerPath": "sdcc",
+  "C_Cpp.default.systemIncludePath": [
+    "/usr/local/share/sdcc/include"
+  ],
+  "files.associations": {
+    "*.lss": "asm",
+    "*.rst": "asm-intel-x86-generic",
+    "calibrate.h": "c",
+    "device.h": "c",
+    "serial_num.h": "c",
+    "uart.h": "c",
+    "measure-pwm.h": "c",
+    "control.h": "c",
+    "leds.h": "c",
+    "stddef.h": "c",
+    "stdio.h": "c",
+    "stdbool.h": "c",
+    "delay.h": "c"
+  }
+}

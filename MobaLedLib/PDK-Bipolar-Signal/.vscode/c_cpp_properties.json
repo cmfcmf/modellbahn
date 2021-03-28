@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "./includes"
+            ],
+            "defines": [
+                "F_CPU=8000000",
+                "PFS173",
+                "__SDCC_pdk15"
+            ],
+            "compilerPath": "/usr/local/bin/sdcc",
+            "cStandard": "c11",
+            "intelliSenseMode": "${default}",
+            "compilerArgs": [
+                "-mpdk15 ",
+                "-DPFS173",
+                "-DF_CPU=8000000"
+            ]
+        }
+    ],
+    "version": 4
+}
