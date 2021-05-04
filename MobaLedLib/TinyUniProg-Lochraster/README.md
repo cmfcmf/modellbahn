@@ -10,5 +10,5 @@ state: finished
 Bei diesem Projekt handelt es sich um eine Lochraster-Variante der _TinyUniProg_-Platine der [MobaLedLib](https://github.com/Hardi-St/MobaLedLib_Docu).
 Sie basiert auf dem [Original-Schaltplan](https://github.com/Hardi-St/MobaLedLib_Docu/blob/75f16147031ef20691729545cb87e0a1215a445a/Platinen/Tiny_UniProg.zip), allerdings ohne Debug-Hardware und auf Basis eines Arduino Nano statt Uno.
 
-![Top View]({{ "/MobaLedLib-TinyUniProg-Lochraster/top.jpg" | relative_url }})
-![Bottom View]({{ "/MobaLedLib-TinyUniProg-Lochraster/bottom.jpg" | relative_url }})
+![Top View]({{ "/MobaLedLib/TinyUniProg-Lochraster/top.jpg" | relative_url }})
+![Bottom View]({{ "/MobaLedLib/TinyUniProg-Lochraster/bottom.jpg" | relative_url }})
